@@ -1,0 +1,146 @@
+PAWMATCH DATABASE SCHEMA
+
+USERS
+-----
+id                  INTEGER PRIMARY KEY
+username            VARCHAR(30) UNIQUE NOT NULL
+password_hash       TEXT NOT NULL
+email               VARCHAR(100) UNIQUE NOT NULL
+first_name          VARCHAR(50) NOT NULL
+last_name           VARCHAR(50) NOT NULL
+bio                  TEXT
+city                 VARCHAR(100)
+state                VARCHAR(50)
+profile_image_url    TEXT
+created_at           TIMESTAMP NOT NULL
+
+Relationship:
+One user can own many dogs.
+One user can create many adoption requests.
+One user can send and receive many messages.
+One user can send and receive playdate requests.
+One user can favorite many dogs.
+One user can write many reviews.
+
+
+DOGS
+----
+id                  INTEGER PRIMARY KEY
+owner_id            INTEGER FOREIGN KEY -> users.id
+shelter_id          INTEGER FOREIGN KEY -> shelters.id
+name                VARCHAR(100) NOT NULL
+breed               VARCHAR(100)
+age                 INTEGER
+size                VARCHAR(30)
+sex                 VARCHAR(20)
+temperament         TEXT
+description         TEXT
+image_url           TEXT
+is_adoptable        BOOLEAN DEFAULT FALSE
+location            VARCHAR(150)
+created_at          TIMESTAMP NOT NULL
+
+Relationship:
+A dog may belong to a PawMatch user or a shelter/rescue.
+A dog may receive many adoption requests.
+A dog may be saved as a favorite by many users.
+A dog may participate in many playdate requests.
+
+
+SHELTERS
+--------
+id                  INTEGER PRIMARY KEY
+name                VARCHAR(150) NOT NULL
+email               VARCHAR(100)
+phone               VARCHAR(30)
+website_url         TEXT
+address             TEXT
+city                VARCHAR(100)
+state               VARCHAR(50)
+
+Relationship:
+One shelter can have many adoptable dogs.
+
+
+FAVORITES
+---------
+id                  INTEGER PRIMARY KEY
+user_id             INTEGER FOREIGN KEY -> users.id NOT NULL
+dog_id              INTEGER FOREIGN KEY -> dogs.id NOT NULL
+created_at          TIMESTAMP NOT NULL
+
+Constraint:
+UNIQUE(user_id, dog_id)
+
+Relationship:
+Many-to-many relationship between users and dogs.
+
+
+ADOPTION_REQUESTS
+-----------------
+id                  INTEGER PRIMARY KEY
+user_id             INTEGER FOREIGN KEY -> users.id NOT NULL
+dog_id              INTEGER FOREIGN KEY -> dogs.id NOT NULL
+message             TEXT
+status              VARCHAR(30) DEFAULT 'pending'
+created_at          TIMESTAMP NOT NULL
+
+Possible status values:
+pending
+approved
+declined
+cancelled
+
+
+PLAYDATE_REQUESTS
+-----------------
+id                  INTEGER PRIMARY KEY
+requester_id        INTEGER FOREIGN KEY -> users.id NOT NULL
+recipient_id        INTEGER FOREIGN KEY -> users.id NOT NULL
+requester_dog_id    INTEGER FOREIGN KEY -> dogs.id NOT NULL
+recipient_dog_id    INTEGER FOREIGN KEY -> dogs.id NOT NULL
+date                DATE
+time                TIME
+location            VARCHAR(200)
+message             TEXT
+status              VARCHAR(30) DEFAULT 'pending'
+created_at          TIMESTAMP NOT NULL
+
+Possible status values:
+pending
+accepted
+declined
+cancelled
+completed
+
+
+MESSAGES
+--------
+id                  INTEGER PRIMARY KEY
+sender_id           INTEGER FOREIGN KEY -> users.id NOT NULL
+recipient_id        INTEGER FOREIGN KEY -> users.id NOT NULL
+body                TEXT NOT NULL
+created_at          TIMESTAMP NOT NULL
+is_read             BOOLEAN DEFAULT FALSE
+
+Relationship:
+Users can send many messages to one another.
+
+
+REVIEWS
+-------
+id                  INTEGER PRIMARY KEY
+reviewer_id         INTEGER FOREIGN KEY -> users.id NOT NULL
+reviewed_user_id    INTEGER FOREIGN KEY -> users.id NOT NULL
+playdate_request_id INTEGER FOREIGN KEY -> playdate_requests.id
+rating              INTEGER NOT NULL
+comment             TEXT
+created_at          TIMESTAMP NOT NULL
+
+Constraints:
+rating must be between 1 and 5.
+
+Relationship:
+A user can write many reviews.
+A user can receive many reviews.
+A review may be tied to a completed playdate.
