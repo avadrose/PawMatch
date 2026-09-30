@@ -2,14 +2,48 @@ import os
 
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, redirect, url_for, flash, session, g, request
-from flask_bcrypt import Bcrypt
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    session,
+    g,
+    request,
+)
 
-from models import db, User, Dog, Favorite, AdoptionRequest, PlaydateRequest, Message
-from forms import RegisterForm, LoginForm, DogForm, DeleteDogForm, FavoriteForm, AdoptionRequestForm, AdoptionDecisionForm, PlaydateRequestForm, PlaydateDecisionForm, MessageForm
+from flask_bcrypt import Bcrypt
+from flask_migrate import Migrate
 from sqlalchemy import or_
 
+from models import (
+    db,
+    User,
+    Dog,
+    Shelter,
+    Favorite,
+    AdoptionRequest,
+    PlaydateRequest,
+    Message,
+)
+
+from forms import (
+    RegisterForm,
+    LoginForm,
+    DogForm,
+    DeleteDogForm,
+    FavoriteForm,
+    AdoptionRequestForm,
+    AdoptionDecisionForm,
+    PlaydateRequestForm,
+    PlaydateDecisionForm,
+    MessageForm,
+)
+
+
 load_dotenv()
+
 
 app = Flask(__name__)
 
@@ -17,8 +51,18 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
+
 db.init_app(app)
+
 bcrypt = Bcrypt(app)
+
+migrate = Migrate(app, db)
+
+
+# =========================================================
+# CURRENT USER
+# =========================================================
+
 
 @app.before_request
 def add_user_to_g():
@@ -32,13 +76,52 @@ def add_user_to_g():
         g.user = None
 
 
+def user_manages_dog(dog):
+    """
+    Return True if the current user manages this dog.
+
+    A dog can be managed either by:
+    - an individual owner
+    - a shelter/rescue account
+    """
+
+    if not g.user:
+        return False
+
+    # Individual owner
+    if dog.owner_id == g.user.id:
+        return True
+
+    # Shelter/rescue account
+    if (
+        g.user.shelter_profile
+        and dog.shelter_id == g.user.shelter_profile.id
+    ):
+        return True
+
+    return False
+
+
+# =========================================================
+# HOMEPAGE
+# =========================================================
+
+
 @app.route("/")
 def homepage():
+    """Show the PawMatch homepage."""
+
     return render_template("home.html")
+
+
+# =========================================================
+# AUTHENTICATION
+# =========================================================
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register a new PawMatch user."""
+    """Register a new individual or shelter PawMatch account."""
 
     form = RegisterForm()
 
@@ -49,16 +132,44 @@ def register():
         ).first()
 
         if existing_username:
-            flash("That username is already taken.", "danger")
-            return render_template("register.html", form=form)
+            flash(
+                "That username is already taken.",
+                "danger",
+            )
+
+            return render_template(
+                "register.html",
+                form=form,
+            )
 
         existing_email = User.query.filter_by(
             email=form.email.data
         ).first()
 
         if existing_email:
-            flash("An account already exists with that email.", "danger")
-            return render_template("register.html", form=form)
+            flash(
+                "An account already exists with that email.",
+                "danger",
+            )
+
+            return render_template(
+                "register.html",
+                form=form,
+            )
+
+        if (
+            form.account_type.data == "shelter"
+            and not form.shelter_name.data
+        ):
+            flash(
+                "Shelter or rescue accounts must provide an organization name.",
+                "danger",
+            )
+
+            return render_template(
+                "register.html",
+                form=form,
+            )
 
         password_hash = bcrypt.generate_password_hash(
             form.password.data
@@ -69,22 +180,46 @@ def register():
             email=form.email.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
-            password_hash=password_hash
+            password_hash=password_hash,
+            account_type=form.account_type.data,
         )
 
         db.session.add(user)
+
+        # Gives the new user an ID before the final commit.
+        db.session.flush()
+
+        if form.account_type.data == "shelter":
+
+            shelter = Shelter(
+                user_id=user.id,
+                name=form.shelter_name.data,
+                email=form.email.data,
+                phone=form.shelter_phone.data,
+                website_url=form.shelter_website.data,
+                address=form.shelter_address.data,
+                city=form.shelter_city.data,
+                state=form.shelter_state.data,
+            )
+
+            db.session.add(shelter)
+
         db.session.commit()
 
         session["user_id"] = user.id
 
         flash(
             f"Welcome to PawMatch, {user.first_name}!",
-            "success"
+            "success",
         )
 
         return redirect(url_for("homepage"))
 
-    return render_template("register.html", form=form)
+    return render_template(
+        "register.html",
+        form=form,
+    )
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -93,29 +228,33 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
+
         user = User.query.filter_by(
             username=form.username.data
         ).first()
 
         if user and bcrypt.check_password_hash(
             user.password_hash,
-            form.password.data
+            form.password.data,
         ):
             session["user_id"] = user.id
 
             flash(
                 f"Welcome back, {user.first_name}!",
-                "success"
+                "success",
             )
 
             return redirect(url_for("homepage"))
 
         flash(
             "Invalid username or password.",
-            "danger"
+            "danger",
         )
 
-    return render_template("login.html", form=form)
+    return render_template(
+        "login.html",
+        form=form,
+    )
 
 
 @app.route("/logout")
@@ -124,9 +263,17 @@ def logout():
 
     session.pop("user_id", None)
 
-    flash("You have been logged out.", "success")
+    flash(
+        "You have been logged out.",
+        "success",
+    )
 
     return redirect(url_for("homepage"))
+
+
+# =========================================================
+# PROFILE
+# =========================================================
 
 
 @app.route("/profile")
@@ -134,24 +281,68 @@ def profile():
     """Show the current user's profile."""
 
     if not g.user:
-        flash("Please log in to view your profile.", "danger")
+        flash(
+            "Please log in to view your profile.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    return render_template("profile.html")
+    if (
+        g.user.account_type == "shelter"
+        and g.user.shelter_profile
+    ):
+        profile_dogs = g.user.shelter_profile.dogs
+    else:
+        profile_dogs = g.user.dogs
+
+    return render_template(
+        "profile.html",
+        profile_dogs=profile_dogs,
+    )
+
+
+# =========================================================
+# DOGS
+# =========================================================
+
 
 @app.route("/dogs/add", methods=["GET", "POST"])
 def add_dog():
-    """Create a new dog belonging to the current user."""
+    """Create a new dog managed by the current account."""
 
     if not g.user:
-        flash("Please log in to add a dog.", "danger")
+        flash(
+            "Please log in to add a dog.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
     form = DogForm()
 
     if form.validate_on_submit():
+
+        if g.user.account_type == "shelter":
+
+            if not g.user.shelter_profile:
+                flash(
+                    "Your shelter profile could not be found.",
+                    "danger",
+                )
+
+                return redirect(url_for("profile"))
+
+            owner_id = None
+            shelter_id = g.user.shelter_profile.id
+
+        else:
+            owner_id = g.user.id
+            shelter_id = None
+
         dog = Dog(
-            owner_id=g.user.id,
+            owner_id=owner_id,
+            shelter_id=shelter_id,
             name=form.name.data,
             breed=form.breed.data,
             age=form.age.data,
@@ -162,7 +353,7 @@ def add_dog():
             image_url=form.image_url.data,
             is_adoptable=form.is_adoptable.data,
             city=form.city.data,
-            state=form.state.data
+            state=form.state.data,
         )
 
         db.session.add(dog)
@@ -170,18 +361,26 @@ def add_dog():
 
         flash(
             f"{dog.name} was added to your profile!",
-            "success"
+            "success",
         )
 
         return redirect(url_for("profile"))
 
-    return render_template("dog_form.html", form=form)
+    return render_template(
+        "dog_form.html",
+        form=form,
+        dog=None,
+    )
+
 
 @app.route("/dogs/<int:dog_id>")
 def dog_detail(dog_id):
     """Show details for one dog."""
 
-    dog = db.get_or_404(Dog, dog_id)
+    dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
 
     delete_form = DeleteDogForm()
     favorite_form = FavoriteForm()
@@ -189,38 +388,64 @@ def dog_detail(dog_id):
     is_favorited = False
 
     if g.user:
+
         favorite = Favorite.query.filter_by(
             user_id=g.user.id,
-            dog_id=dog.id
+            dog_id=dog.id,
         ).first()
 
         is_favorited = favorite is not None
+
+    can_manage = user_manages_dog(dog)
 
     return render_template(
         "dog_detail.html",
         dog=dog,
         delete_form=delete_form,
         favorite_form=favorite_form,
-        is_favorited=is_favorited
+        is_favorited=is_favorited,
+        can_manage=can_manage,
     )
 
-@app.route("/dogs/<int:dog_id>/edit", methods=["GET", "POST"])
+
+@app.route(
+    "/dogs/<int:dog_id>/edit",
+    methods=["GET", "POST"],
+)
 def edit_dog(dog_id):
-    """Edit a dog owned by the current user."""
+    """Edit a dog managed by the current user."""
 
     if not g.user:
-        flash("Please log in to edit a dog.", "danger")
+        flash(
+            "Please log in to edit a dog.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    dog = db.get_or_404(Dog, dog_id)
+    dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
 
-    if dog.owner_id != g.user.id:
-        flash("You are not allowed to edit this dog.", "danger")
-        return redirect(url_for("dog_detail", dog_id=dog.id))
+    if not user_manages_dog(dog):
+
+        flash(
+            "You are not allowed to edit this dog.",
+            "danger",
+        )
+
+        return redirect(
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
+        )
 
     form = DogForm(obj=dog)
 
     if form.validate_on_submit():
+
         dog.name = form.name.data
         dog.breed = form.breed.data
         dog.age = form.age.data
@@ -235,40 +460,73 @@ def edit_dog(dog_id):
 
         db.session.commit()
 
-        flash(f"{dog.name}'s profile was updated.", "success")
+        flash(
+            f"{dog.name}'s profile was updated.",
+            "success",
+        )
 
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     return render_template(
         "dog_form.html",
         form=form,
-        dog=dog
+        dog=dog,
     )
 
-@app.route("/dogs/<int:dog_id>/delete", methods=["POST"])
+
+@app.route(
+    "/dogs/<int:dog_id>/delete",
+    methods=["POST"],
+)
 def delete_dog(dog_id):
-    """Delete a dog owned by the current user."""
+    """Delete a dog managed by the current user."""
 
     if not g.user:
-        flash("Please log in to delete a dog.", "danger")
+        flash(
+            "Please log in to delete a dog.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    dog = db.get_or_404(Dog, dog_id)
+    dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
 
-    if dog.owner_id != g.user.id:
-        flash("You are not allowed to delete this dog.", "danger")
+    if not user_manages_dog(dog):
+
+        flash(
+            "You are not allowed to delete this dog.",
+            "danger",
+        )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     form = DeleteDogForm()
 
     if not form.validate_on_submit():
-        flash("Unable to delete dog.", "danger")
+
+        flash(
+            "Unable to delete dog.",
+            "danger",
+        )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     dog_name = dog.name
@@ -278,26 +536,55 @@ def delete_dog(dog_id):
 
     flash(
         f"{dog_name} was deleted.",
-        "success"
+        "success",
     )
 
     return redirect(url_for("profile"))
+
+
+# =========================================================
+# ADOPTABLE DOG SEARCH
+# =========================================================
+
 
 @app.route("/adopt")
 def adoptable_dogs():
     """Show and filter dogs currently available for adoption."""
 
-    query = Dog.query.filter_by(is_adoptable=True)
+    query = Dog.query.filter_by(
+        is_adoptable=True
+    )
 
-    breed = request.args.get("breed", "").strip()
-    size = request.args.get("size", "").strip()
-    sex = request.args.get("sex", "").strip()
-    location = request.args.get("location", "").strip()
-    temperament = request.args.get("temperament", "").strip()
+    breed = request.args.get(
+        "breed",
+        "",
+    ).strip()
+
+    size = request.args.get(
+        "size",
+        "",
+    ).strip()
+
+    sex = request.args.get(
+        "sex",
+        "",
+    ).strip()
+
+    location = request.args.get(
+        "location",
+        "",
+    ).strip()
+
+    temperament = request.args.get(
+        "temperament",
+        "",
+    ).strip()
 
     if breed:
         query = query.filter(
-            Dog.breed.ilike(f"%{breed}%")
+            Dog.breed.ilike(
+                f"%{breed}%"
+            )
         )
 
     if size:
@@ -311,18 +598,27 @@ def adoptable_dogs():
         )
 
     if location:
-        location_search = f"%{location}%"
+
+        location_search = (
+            f"%{location}%"
+        )
 
         query = query.filter(
             or_(
-                Dog.city.ilike(location_search),
-                Dog.state.ilike(location_search)
+                Dog.city.ilike(
+                    location_search
+                ),
+                Dog.state.ilike(
+                    location_search
+                ),
             )
         )
 
     if temperament:
         query = query.filter(
-            Dog.temperament.ilike(f"%{temperament}%")
+            Dog.temperament.ilike(
+                f"%{temperament}%"
+            )
         )
 
     dogs = query.order_by(
@@ -336,54 +632,87 @@ def adoptable_dogs():
         size=size,
         sex=sex,
         location=location,
-        temperament=temperament
+        temperament=temperament,
     )
 
 
-@app.route("/dogs/<int:dog_id>/favorite", methods=["POST"])
+# =========================================================
+# FAVORITES
+# =========================================================
+
+
+@app.route(
+    "/dogs/<int:dog_id>/favorite",
+    methods=["POST"],
+)
 def favorite_dog(dog_id):
     """Save an adoptable dog to the current user's favorites."""
 
     if not g.user:
-        flash("Please log in to save dogs.", "danger")
+        flash(
+            "Please log in to save dogs.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    dog = db.get_or_404(Dog, dog_id)
+    dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
 
     form = FavoriteForm()
 
     if not form.validate_on_submit():
-        flash("Unable to save dog.", "danger")
+
+        flash(
+            "Unable to save dog.",
+            "danger",
+        )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     if not dog.is_adoptable:
+
         flash(
             "Only dogs available for adoption can be saved.",
-            "danger"
+            "danger",
         )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     existing_favorite = Favorite.query.filter_by(
         user_id=g.user.id,
-        dog_id=dog.id
+        dog_id=dog.id,
     ).first()
 
     if existing_favorite:
+
         flash(
             f"{dog.name} is already in your favorites.",
-            "info"
+            "info",
         )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     favorite = Favorite(
         user_id=g.user.id,
-        dog_id=dog.id
+        dog_id=dog.id,
     )
 
     db.session.add(favorite)
@@ -391,58 +720,89 @@ def favorite_dog(dog_id):
 
     flash(
         f"{dog.name} was added to your favorites!",
-        "success"
+        "success",
     )
 
     return redirect(
-        url_for("dog_detail", dog_id=dog.id)
+        url_for(
+            "dog_detail",
+            dog_id=dog.id,
+        )
     )
 
-@app.route("/dogs/<int:dog_id>/unfavorite", methods=["POST"])
+
+@app.route(
+    "/dogs/<int:dog_id>/unfavorite",
+    methods=["POST"],
+)
 def unfavorite_dog(dog_id):
     """Remove a dog from the current user's favorites."""
 
     if not g.user:
-        flash("Please log in first.", "danger")
+        flash(
+            "Please log in first.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    dog = db.get_or_404(Dog, dog_id)
+    dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
 
     form = FavoriteForm()
 
     if not form.validate_on_submit():
-        flash("Unable to remove favorite.", "danger")
+
+        flash(
+            "Unable to remove favorite.",
+            "danger",
+        )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     favorite = Favorite.query.filter_by(
         user_id=g.user.id,
-        dog_id=dog.id
+        dog_id=dog.id,
     ).first()
 
     if favorite:
+
         db.session.delete(favorite)
         db.session.commit()
 
         flash(
             f"{dog.name} was removed from your favorites.",
-            "success"
+            "success",
         )
 
     return redirect(
-        url_for("dog_detail", dog_id=dog.id)
+        url_for(
+            "dog_detail",
+            dog_id=dog.id,
+        )
     )
+
 
 @app.route("/favorites")
 def favorites():
     """Show the current user's saved dogs."""
 
     if not g.user:
-        flash("Please log in to view your favorites.", "danger")
+        flash(
+            "Please log in to view your favorites.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    favorites = Favorite.query.filter_by(
+    saved_favorites = Favorite.query.filter_by(
         user_id=g.user.id
     ).order_by(
         Favorite.created_at.desc()
@@ -450,54 +810,87 @@ def favorites():
 
     return render_template(
         "favorites.html",
-        favorites=favorites
+        favorites=saved_favorites,
     )
 
 
-@app.route("/dogs/<int:dog_id>/adopt", methods=["GET", "POST"])
+# =========================================================
+# ADOPTION REQUESTS
+# =========================================================
+
+
+@app.route(
+    "/dogs/<int:dog_id>/adopt",
+    methods=["GET", "POST"],
+)
 def request_adoption(dog_id):
     """Submit an adoption request for an adoptable dog."""
 
     if not g.user:
+
         flash(
             "Please log in to submit an adoption request.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("login"))
 
-    dog = db.get_or_404(Dog, dog_id)
+    dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
 
     if not dog.is_adoptable:
+
         flash(
             "This dog is not currently available for adoption.",
-            "danger"
-        )
-        return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            "danger",
         )
 
-    if dog.owner_id == g.user.id:
-        flash(
-            "You cannot submit an adoption request for your own dog.",
-            "danger"
-        )
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
+        )
+
+    if user_manages_dog(dog):
+
+        flash(
+            "You cannot submit an adoption request for a dog you manage.",
+            "danger",
+        )
+
+        return redirect(
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     existing_request = AdoptionRequest.query.filter(
         AdoptionRequest.user_id == g.user.id,
         AdoptionRequest.dog_id == dog.id,
-        AdoptionRequest.status.in_(["pending", "approved"])
+        AdoptionRequest.status.in_(
+            [
+                "pending",
+                "approved",
+            ]
+        ),
     ).first()
 
     if existing_request:
+
         flash(
             "You already have an active adoption request for this dog.",
-            "info"
+            "info",
         )
+
         return redirect(
-            url_for("dog_detail", dog_id=dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=dog.id,
+            )
         )
 
     form = AdoptionRequestForm()
@@ -507,25 +900,30 @@ def request_adoption(dog_id):
         adoption_request = AdoptionRequest(
             user_id=g.user.id,
             dog_id=dog.id,
-            message=form.message.data
+            message=form.message.data,
         )
 
-        db.session.add(adoption_request)
+        db.session.add(
+            adoption_request
+        )
+
         db.session.commit()
 
         flash(
             f"Your adoption request for {dog.name} was sent!",
-            "success"
+            "success",
         )
 
         return redirect(
-            url_for("my_adoption_requests")
+            url_for(
+                "my_adoption_requests"
+            )
         )
 
     return render_template(
         "adoption_request.html",
         form=form,
-        dog=dog
+        dog=dog,
     )
 
 
@@ -534,82 +932,134 @@ def my_adoption_requests():
     """Show adoption requests submitted by the logged-in user."""
 
     if not g.user:
+
         flash(
             "Please log in to view your adoption requests.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("login"))
 
     adoption_requests = (
         AdoptionRequest.query
-        .filter(AdoptionRequest.user_id == g.user.id)
-        .order_by(AdoptionRequest.created_at.desc())
+        .filter(
+            AdoptionRequest.user_id
+            == g.user.id
+        )
+        .order_by(
+            AdoptionRequest.created_at.desc()
+        )
         .all()
     )
 
     return render_template(
         "my_adoption_requests.html",
-        adoption_requests=adoption_requests
+        adoption_requests=adoption_requests,
     )
 
 
 @app.route("/adoption-requests/incoming")
 def incoming_adoption_requests():
-    """Show adoption requests for dogs owned by the current user."""
+    """Show adoption requests for dogs managed by the current user."""
 
     if not g.user:
+
         flash(
             "Please log in to view incoming adoption requests.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("login"))
 
-    adoption_requests = (
-        AdoptionRequest.query
-        .join(Dog)
-        .filter(Dog.owner_id == g.user.id)
-        .order_by(AdoptionRequest.created_at.desc())
-        .all()
-    )
+    if (
+        g.user.account_type == "shelter"
+        and g.user.shelter_profile
+    ):
+
+        adoption_requests = (
+            AdoptionRequest.query
+            .join(Dog)
+            .filter(
+                Dog.shelter_id
+                == g.user.shelter_profile.id
+            )
+            .order_by(
+                AdoptionRequest.created_at.desc()
+            )
+            .all()
+        )
+
+    else:
+
+        adoption_requests = (
+            AdoptionRequest.query
+            .join(Dog)
+            .filter(
+                Dog.owner_id
+                == g.user.id
+            )
+            .order_by(
+                AdoptionRequest.created_at.desc()
+            )
+            .all()
+        )
 
     decision_form = AdoptionDecisionForm()
 
     return render_template(
         "incoming_adoption_requests.html",
         adoption_requests=adoption_requests,
-        decision_form=decision_form
+        decision_form=decision_form,
     )
 
 
 @app.route(
     "/adoption-requests/<int:request_id>/approve",
-    methods=["POST"]
+    methods=["POST"],
 )
 def approve_adoption_request(request_id):
     """Approve an adoption request."""
 
     if not g.user:
-        flash("Please log in first.", "danger")
+
+        flash(
+            "Please log in first.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
     adoption_request = db.get_or_404(
         AdoptionRequest,
-        request_id
+        request_id,
     )
 
-    if adoption_request.dog.owner_id != g.user.id:
+    if not user_manages_dog(
+        adoption_request.dog
+    ):
+
         flash(
             "You are not allowed to manage this adoption request.",
-            "danger"
+            "danger",
         )
-        return redirect(url_for("homepage"))
+
+        return redirect(
+            url_for("homepage")
+        )
 
     form = AdoptionDecisionForm()
 
     if not form.validate_on_submit():
-        flash("Unable to update request.", "danger")
+
+        flash(
+            "Unable to update request.",
+            "danger",
+        )
+
         return redirect(
-            url_for("incoming_adoption_requests")
+            url_for(
+                "incoming_adoption_requests"
+            )
         )
 
     adoption_request.status = "approved"
@@ -619,43 +1069,63 @@ def approve_adoption_request(request_id):
     flash(
         f"{adoption_request.user.username}'s request "
         f"for {adoption_request.dog.name} was approved.",
-        "success"
+        "success",
     )
 
     return redirect(
-        url_for("incoming_adoption_requests")
+        url_for(
+            "incoming_adoption_requests"
+        )
     )
 
 
 @app.route(
     "/adoption-requests/<int:request_id>/decline",
-    methods=["POST"]
+    methods=["POST"],
 )
 def decline_adoption_request(request_id):
     """Decline an adoption request."""
 
     if not g.user:
-        flash("Please log in first.", "danger")
+
+        flash(
+            "Please log in first.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
     adoption_request = db.get_or_404(
         AdoptionRequest,
-        request_id
+        request_id,
     )
 
-    if adoption_request.dog.owner_id != g.user.id:
+    if not user_manages_dog(
+        adoption_request.dog
+    ):
+
         flash(
             "You are not allowed to manage this adoption request.",
-            "danger"
+            "danger",
         )
-        return redirect(url_for("homepage"))
+
+        return redirect(
+            url_for("homepage")
+        )
 
     form = AdoptionDecisionForm()
 
     if not form.validate_on_submit():
-        flash("Unable to update request.", "danger")
+
+        flash(
+            "Unable to update request.",
+            "danger",
+        )
+
         return redirect(
-            url_for("incoming_adoption_requests")
+            url_for(
+                "incoming_adoption_requests"
+            )
         )
 
     adoption_request.status = "declined"
@@ -665,36 +1135,81 @@ def decline_adoption_request(request_id):
     flash(
         f"{adoption_request.user.username}'s request "
         f"for {adoption_request.dog.name} was declined.",
-        "success"
+        "success",
     )
 
     return redirect(
-        url_for("incoming_adoption_requests")
+        url_for(
+            "incoming_adoption_requests"
+        )
     )
+
+
+# =========================================================
+# PLAYDATES
+# =========================================================
+
 
 @app.route(
     "/dogs/<int:dog_id>/playdate",
-    methods=["GET", "POST"]
+    methods=["GET", "POST"],
 )
 def request_playdate(dog_id):
     """Request a playdate with another user's dog."""
 
     if not g.user:
+
         flash(
             "Please log in to request a playdate.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("login"))
 
-    recipient_dog = db.get_or_404(Dog, dog_id)
+    # Shelter/rescue accounts manage adoption listings,
+    # not personal playdate profiles.
+    if g.user.account_type == "shelter":
 
-    if recipient_dog.owner_id == g.user.id:
+        flash(
+            "Shelter and rescue accounts cannot request playdates.",
+            "info",
+        )
+
+        return redirect(url_for("profile"))
+
+    recipient_dog = db.get_or_404(
+        Dog,
+        dog_id,
+    )
+
+    # Shelter-listed dogs are adoption listings rather than
+    # personal dogs available for social playdates.
+    if recipient_dog.owner_id is None:
+
+        flash(
+            "This dog is not available for playdate requests.",
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "dog_detail",
+                dog_id=recipient_dog.id,
+            )
+        )
+
+    if user_manages_dog(recipient_dog):
+
         flash(
             "You cannot request a playdate with your own dog.",
-            "danger"
+            "danger",
         )
+
         return redirect(
-            url_for("dog_detail", dog_id=recipient_dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=recipient_dog.id,
+            )
         )
 
     user_dogs = Dog.query.filter_by(
@@ -702,16 +1217,21 @@ def request_playdate(dog_id):
     ).all()
 
     if not user_dogs:
+
         flash(
             "You need to add one of your dogs before requesting a playdate.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("profile"))
 
     form = PlaydateRequestForm()
 
     form.requester_dog_id.choices = [
-        (dog.id, dog.name)
+        (
+            dog.id,
+            dog.name,
+        )
         for dog in user_dogs
     ]
 
@@ -719,21 +1239,24 @@ def request_playdate(dog_id):
 
         requester_dog = db.session.get(
             Dog,
-            form.requester_dog_id.data
+            form.requester_dog_id.data,
         )
 
         if (
             not requester_dog
-            or requester_dog.owner_id != g.user.id
+            or requester_dog.owner_id
+            != g.user.id
         ):
+
             flash(
                 "That dog does not belong to your account.",
-                "danger"
+                "danger",
             )
+
             return redirect(
                 url_for(
                     "dog_detail",
-                    dog_id=recipient_dog.id
+                    dog_id=recipient_dog.id,
                 )
             )
 
@@ -743,26 +1266,32 @@ def request_playdate(dog_id):
             date=form.date.data,
             time=form.time.data,
             location=form.location.data,
-            message=form.message.data
+            message=form.message.data,
         )
 
-        db.session.add(playdate_request)
+        db.session.add(
+            playdate_request
+        )
+
         db.session.commit()
 
         flash(
             f"Playdate request sent to "
             f"{recipient_dog.name}'s owner!",
-            "success"
+            "success",
         )
 
         return redirect(
-            url_for("dog_detail", dog_id=recipient_dog.id)
+            url_for(
+                "dog_detail",
+                dog_id=recipient_dog.id,
+            )
         )
 
     return render_template(
         "playdate_request.html",
         form=form,
-        recipient_dog=recipient_dog
+        recipient_dog=recipient_dog,
     )
 
 
@@ -771,10 +1300,12 @@ def incoming_playdates():
     """Show playdate requests sent to the current user's dogs."""
 
     if not g.user:
+
         flash(
             "Please log in to view playdate requests.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("login"))
 
     playdate_requests = (
@@ -795,96 +1326,142 @@ def incoming_playdates():
     return render_template(
         "incoming_playdates.html",
         playdate_requests=playdate_requests,
-        decision_form=decision_form
+        decision_form=decision_form,
     )
 
 
 @app.route(
     "/playdates/<int:request_id>/accept",
-    methods=["POST"]
+    methods=["POST"],
 )
 def accept_playdate(request_id):
     """Accept an incoming playdate request."""
 
     if not g.user:
-        flash("Please log in first.", "danger")
+
+        flash(
+            "Please log in first.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
     playdate = db.get_or_404(
         PlaydateRequest,
-        request_id
+        request_id,
     )
 
-    if playdate.recipient_dog.owner_id != g.user.id:
+    if (
+        playdate.recipient_dog.owner_id
+        != g.user.id
+    ):
+
         flash(
             "You are not allowed to manage this playdate request.",
-            "danger"
+            "danger",
         )
-        return redirect(url_for("homepage"))
+
+        return redirect(
+            url_for("homepage")
+        )
 
     form = PlaydateDecisionForm()
 
     if not form.validate_on_submit():
+
         flash(
             "Unable to update the playdate request.",
-            "danger"
+            "danger",
         )
-        return redirect(url_for("incoming_playdates"))
+
+        return redirect(
+            url_for(
+                "incoming_playdates"
+            )
+        )
 
     playdate.status = "accepted"
 
     db.session.commit()
 
     flash(
-        f"Playdate with {playdate.requester_dog.name} accepted!",
-        "success"
+        f"Playdate with "
+        f"{playdate.requester_dog.name} accepted!",
+        "success",
     )
 
-    return redirect(url_for("incoming_playdates"))
+    return redirect(
+        url_for(
+            "incoming_playdates"
+        )
+    )
 
 
 @app.route(
     "/playdates/<int:request_id>/decline",
-    methods=["POST"]
+    methods=["POST"],
 )
 def decline_playdate(request_id):
     """Decline an incoming playdate request."""
 
     if not g.user:
-        flash("Please log in first.", "danger")
+
+        flash(
+            "Please log in first.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
     playdate = db.get_or_404(
         PlaydateRequest,
-        request_id
+        request_id,
     )
 
-    if playdate.recipient_dog.owner_id != g.user.id:
+    if (
+        playdate.recipient_dog.owner_id
+        != g.user.id
+    ):
+
         flash(
             "You are not allowed to manage this playdate request.",
-            "danger"
+            "danger",
         )
-        return redirect(url_for("homepage"))
+
+        return redirect(
+            url_for("homepage")
+        )
 
     form = PlaydateDecisionForm()
 
     if not form.validate_on_submit():
+
         flash(
             "Unable to update the playdate request.",
-            "danger"
+            "danger",
         )
-        return redirect(url_for("incoming_playdates"))
+
+        return redirect(
+            url_for(
+                "incoming_playdates"
+            )
+        )
 
     playdate.status = "declined"
 
     db.session.commit()
 
     flash(
-        f"Playdate request from {playdate.requester_dog.name} declined.",
-        "success"
+        f"Playdate request from "
+        f"{playdate.requester_dog.name} declined.",
+        "success",
     )
 
-    return redirect(url_for("incoming_playdates"))
+    return redirect(
+        url_for(
+            "incoming_playdates"
+        )
+    )
 
 
 @app.route("/playdates")
@@ -892,10 +1469,12 @@ def my_playdates():
     """Show playdate requests sent by the current user's dogs."""
 
     if not g.user:
+
         flash(
             "Please log in to view your playdates.",
-            "danger"
+            "danger",
         )
+
         return redirect(url_for("login"))
 
     playdate_requests = (
@@ -913,31 +1492,55 @@ def my_playdates():
 
     return render_template(
         "my_playdates.html",
-        playdate_requests=playdate_requests
+        playdate_requests=playdate_requests,
     )
 
 
-@app.route("/messages/new/<int:user_id>", methods=["GET", "POST"])
+# =========================================================
+# MESSAGES
+# =========================================================
+
+
+@app.route(
+    "/messages/new/<int:user_id>",
+    methods=["GET", "POST"],
+)
 def send_message(user_id):
     """Send a private message to another PawMatch user."""
 
     if not g.user:
-        flash("Please log in to send messages.", "danger")
+
+        flash(
+            "Please log in to send messages.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
-    recipient = db.get_or_404(User, user_id)
+    recipient = db.get_or_404(
+        User,
+        user_id,
+    )
 
     if recipient.id == g.user.id:
-        flash("You cannot message yourself.", "danger")
-        return redirect(url_for("profile"))
+
+        flash(
+            "You cannot message yourself.",
+            "danger",
+        )
+
+        return redirect(
+            url_for("profile")
+        )
 
     form = MessageForm()
 
     if form.validate_on_submit():
+
         message = Message(
             sender_id=g.user.id,
             recipient_id=recipient.id,
-            body=form.body.data
+            body=form.body.data,
         )
 
         db.session.add(message)
@@ -945,36 +1548,54 @@ def send_message(user_id):
 
         flash(
             f"Message sent to {recipient.username}!",
-            "success"
+            "success",
         )
 
-        return redirect(url_for("messages"))
+        return redirect(
+            url_for("messages")
+        )
 
     return render_template(
         "send_message.html",
         form=form,
-        recipient=recipient
+        recipient=recipient,
     )
+
 
 @app.route("/messages")
 def messages():
     """Show messages received by the current user."""
 
     if not g.user:
-        flash("Please log in to view your messages.", "danger")
+
+        flash(
+            "Please log in to view your messages.",
+            "danger",
+        )
+
         return redirect(url_for("login"))
 
     received_messages = (
         Message.query
-        .filter_by(recipient_id=g.user.id)
-        .order_by(Message.created_at.desc())
+        .filter_by(
+            recipient_id=g.user.id
+        )
+        .order_by(
+            Message.created_at.desc()
+        )
         .all()
     )
 
     return render_template(
         "messages.html",
-        messages=received_messages
+        messages=received_messages,
     )
+
+
+# =========================================================
+# RUN APPLICATION
+# =========================================================
+
 
 if __name__ == "__main__":
     app.run(debug=True)

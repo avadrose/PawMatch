@@ -4,66 +4,142 @@
 My Playdates | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>My Playdate Requests</h1>
+<div class="container page-container">
 
-{% if playdate_requests %}
+  <div class="page-header">
 
-  {% for playdate in playdate_requests %}
+    <h1>My Playdate Requests</h1>
 
-    <div>
+    <p class="page-subtitle">
+      Keep track of playdate requests you've sent.
+    </p>
 
-      <h2>
-        {{ playdate.requester_dog.name }}
-        and
-        {{ playdate.recipient_dog.name }}
-      </h2>
+  </div>
 
-      <p>
-        <strong>Status:</strong>
-        {{ playdate.status|title }}
-      </p>
 
-      <p>
-        <strong>Date:</strong>
-        {{ playdate.date }}
-      </p>
+  {% if playdate_requests %}
 
-      <p>
-        <strong>Time:</strong>
-        {{ playdate.time.strftime("%I:%M %p") }}
-      </p>
+    {% for playdate in playdate_requests %}
 
-      <p>
-        <strong>Location:</strong>
-        {{ playdate.location }}
-      </p>
+      <div class="request-card">
 
-      {% if playdate.message %}
+        <div
+          class="d-flex
+                 flex-column
+                 flex-md-row
+                 justify-content-between
+                 align-items-md-start
+                 gap-3"
+        >
+
+          <div>
+
+            <h2 class="mb-2">
+              {{ playdate.requester_dog.name }}
+              &
+              {{ playdate.recipient_dog.name }}
+            </h2>
+
+            <p class="text-muted mb-0">
+              🐕 Playdate Request
+            </p>
+
+          </div>
+
+
+          <span
+            class="status-badge
+                   status-{{ playdate.status }}"
+          >
+            {{ playdate.status|title }}
+          </span>
+
+        </div>
+
+
+        <hr>
+
+
+        <div class="row">
+
+          <div class="col-md-6">
+
+            <p>
+              <strong>Date:</strong><br>
+              {{ playdate.date.strftime("%B %d, %Y") }}
+            </p>
+
+          </div>
+
+
+          <div class="col-md-6">
+
+            <p>
+              <strong>Time:</strong><br>
+              {{ playdate.time.strftime("%I:%M %p") }}
+            </p>
+
+          </div>
+
+        </div>
+
+
         <p>
-          <strong>Your Message:</strong>
-          {{ playdate.message }}
+          <strong>Location:</strong><br>
+          📍 {{ playdate.location }}
         </p>
-      {% endif %}
+
+
+        {% if playdate.message %}
+
+          <p>
+            <strong>Your Message:</strong>
+          </p>
+
+          <p>
+            {{ playdate.message }}
+          </p>
+
+        {% endif %}
+
+
+        {% if playdate.recipient_dog.owner %}
+
+          <p class="text-muted small mb-0">
+            With
+            {{ playdate.recipient_dog.owner.username }}
+            and {{ playdate.recipient_dog.name }}
+          </p>
+
+        {% endif %}
+
+      </div>
+
+    {% endfor %}
+
+
+  {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        🐕
+      </div>
+
+      <h2>No playdate requests yet</h2>
 
       <p>
-        <strong>With:</strong>
-        {{ playdate.recipient_dog.owner.username }}
+        Visit another PawMatch member's dog profile
+        to request a playdate.
       </p>
 
     </div>
 
-    <hr>
+  {% endif %}
 
-  {% endfor %}
-
-{% else %}
-
-  <p>
-    You haven't sent any playdate requests yet.
-  </p>
-
-{% endif %}
+</div>
 
 {% endblock %}

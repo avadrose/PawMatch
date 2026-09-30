@@ -4,72 +4,171 @@
 Playdate with {{ recipient_dog.name }} | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>
-  Request a Playdate with {{ recipient_dog.name }}
-</h1>
+<div class="container">
 
-<form method="POST">
+  <div class="pawmatch-card form-card">
 
-  {{ form.hidden_tag() }}
+    <div class="text-center mb-4">
 
-  <div>
-    {{ form.requester_dog_id.label }}
-    {{ form.requester_dog_id() }}
+      <div class="fs-1">
+        🐕🐕
+      </div>
 
-    {% for error in form.requester_dog_id.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
+      <h1 class="auth-heading">
+        Request a Playdate
+      </h1>
+
+      <p class="text-muted">
+        Plan a playdate with
+        {{ recipient_dog.name }}.
+      </p>
+
+    </div>
+
+
+    {% if recipient_dog.image_url %}
+
+      <img
+        src="{{ recipient_dog.image_url }}"
+        alt="{{ recipient_dog.name }}"
+        class="dog-detail-image mb-4"
+      >
+
+    {% endif %}
+
+
+    <form method="POST">
+
+      {{ form.hidden_tag() }}
+
+
+      <div class="mb-3">
+
+        {{ form.requester_dog_id.label(
+          class="form-label"
+        ) }}
+
+        {{ form.requester_dog_id(
+          class="form-select"
+        ) }}
+
+        {% for error in form.requester_dog_id.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      <div class="row">
+
+        <div class="col-md-6 mb-3">
+
+          {{ form.date.label(
+            class="form-label"
+          ) }}
+
+          {{ form.date(
+            class="form-control"
+          ) }}
+
+          {% for error in form.date.errors %}
+            <div class="form-error">
+              {{ error }}
+            </div>
+          {% endfor %}
+
+        </div>
+
+
+        <div class="col-md-6 mb-3">
+
+          {{ form.time.label(
+            class="form-label"
+          ) }}
+
+          {{ form.time(
+            class="form-control"
+          ) }}
+
+          {% for error in form.time.errors %}
+            <div class="form-error">
+              {{ error }}
+            </div>
+          {% endfor %}
+
+        </div>
+
+      </div>
+
+
+      <div class="mb-3">
+
+        {{ form.location.label(
+          class="form-label"
+        ) }}
+
+        {{ form.location(
+          class="form-control",
+          placeholder="Park, dog park, neighborhood..."
+        ) }}
+
+        {% for error in form.location.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      <div class="mb-4">
+
+        {{ form.message.label(
+          class="form-label"
+        ) }}
+
+        {{ form.message(
+          class="form-control",
+          rows=5,
+          placeholder="Introduce yourself and your dog..."
+        ) }}
+
+        {% for error in form.message.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      {{ form.submit(
+        class="btn pawmatch-btn w-100"
+      ) }}
+
+    </form>
+
+
+    <div class="text-center mt-3">
+
+      <a
+        href="{{ url_for(
+          'dog_detail',
+          dog_id=recipient_dog.id
+        ) }}"
+      >
+        ← Back to {{ recipient_dog.name }}
+      </a>
+
+    </div>
+
   </div>
 
-  <div>
-    {{ form.date.label }}
-    {{ form.date() }}
-
-    {% for error in form.date.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
-
-  <div>
-    {{ form.time.label }}
-    {{ form.time() }}
-
-    {% for error in form.time.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
-
-  <div>
-    {{ form.location.label }}
-    {{ form.location() }}
-
-    {% for error in form.location.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
-
-  <div>
-    {{ form.message.label }}
-    {{ form.message(rows=5) }}
-
-    {% for error in form.message.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
-
-  {{ form.submit() }}
-
-</form>
-
-<p>
-  <a href="{{ url_for(
-    'dog_detail',
-    dog_id=recipient_dog.id
-  ) }}">
-    Back to {{ recipient_dog.name }}
-  </a>
-</p>
+</div>
 
 {% endblock %}

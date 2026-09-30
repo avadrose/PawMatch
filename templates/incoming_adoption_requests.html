@@ -4,87 +4,170 @@
 Incoming Adoption Requests | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>Incoming Adoption Requests</h1>
+<div class="container page-container">
 
-{% if adoption_requests %}
+  <div class="page-header">
 
-  {% for adoption_request in adoption_requests %}
+    <h1>Incoming Adoption Requests</h1>
 
-    <div>
+    <p class="page-subtitle">
+      Review adoption inquiries for dogs you manage.
+    </p>
 
-      <h2>
-        Request for
-        <a href="{{ url_for('dog_detail', dog_id=adoption_request.dog.id) }}">
-          {{ adoption_request.dog.name }}
-        </a>
-      </h2>
+  </div>
 
-      <p>
-        <strong>From:</strong>
-        {{ adoption_request.user.username }}
-      </p>
 
-      <p>
-        <strong>Message:</strong>
-        {{ adoption_request.message }}
-      </p>
+  {% if adoption_requests %}
 
-      <p>
-        <strong>Status:</strong>
-        {{ adoption_request.status|title }}
-      </p>
+    {% for adoption_request in adoption_requests %}
 
-      <p>
-        <strong>Submitted:</strong>
-        {{ adoption_request.created_at.strftime("%B %d, %Y") }}
-      </p>
+      <div class="request-card">
 
-      {% if adoption_request.status == "pending" %}
-
-        <form
-          method="POST"
-          action="{{ url_for(
-            'approve_adoption_request',
-            request_id=adoption_request.id
-          ) }}"
+        <div
+          class="d-flex
+                 flex-column
+                 flex-md-row
+                 justify-content-between
+                 align-items-md-start
+                 gap-3"
         >
-          {{ decision_form.hidden_tag() }}
 
-          <button type="submit">
-            Approve
-          </button>
-        </form>
+          <div>
 
-        <form
-          method="POST"
-          action="{{ url_for(
-            'decline_adoption_request',
-            request_id=adoption_request.id
-          ) }}"
-        >
-          {{ decision_form.hidden_tag() }}
+            <h2 class="mb-2">
+              Request for
 
-          <button type="submit">
-            Decline
-          </button>
-        </form>
+              <a
+                href="{{ url_for(
+                  'dog_detail',
+                  dog_id=adoption_request.dog.id
+                ) }}"
+              >
+                {{ adoption_request.dog.name }}
+              </a>
+            </h2>
 
-      {% endif %}
+
+            <p class="mb-1">
+
+              <strong>From:</strong>
+
+              {{ adoption_request.user.first_name }}
+              {{ adoption_request.user.last_name }}
+
+              <span class="text-muted">
+                (@{{ adoption_request.user.username }})
+              </span>
+
+            </p>
+
+          </div>
+
+
+          <span
+            class="status-badge
+                   status-{{ adoption_request.status }}"
+          >
+            {{ adoption_request.status|title }}
+          </span>
+
+        </div>
+
+
+        <hr>
+
+
+        <p>
+          <strong>Message:</strong>
+        </p>
+
+        <p>
+          {{ adoption_request.message }}
+        </p>
+
+
+        <p class="text-muted small">
+          Submitted
+          {{ adoption_request.created_at.strftime(
+            "%B %d, %Y at %I:%M %p"
+          ) }}
+        </p>
+
+
+        {% if adoption_request.status == "pending" %}
+
+          <div class="action-group">
+
+            <form
+              method="POST"
+              action="{{ url_for(
+                'approve_adoption_request',
+                request_id=adoption_request.id
+              ) }}"
+            >
+
+              {{ decision_form.hidden_tag() }}
+
+              <button
+                type="submit"
+                class="btn pawmatch-btn"
+              >
+                ✓ Approve
+              </button>
+
+            </form>
+
+
+            <form
+              method="POST"
+              action="{{ url_for(
+                'decline_adoption_request',
+                request_id=adoption_request.id
+              ) }}"
+            >
+
+              {{ decision_form.hidden_tag() }}
+
+              <button
+                type="submit"
+                class="btn pawmatch-btn-danger"
+              >
+                Decline
+              </button>
+
+            </form>
+
+          </div>
+
+        {% endif %}
+
+      </div>
+
+    {% endfor %}
+
+
+  {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        🐾
+      </div>
+
+      <h2>No incoming requests</h2>
+
+      <p>
+        Adoption inquiries for your dogs will
+        appear here.
+      </p>
 
     </div>
 
-    <hr>
+  {% endif %}
 
-  {% endfor %}
-
-{% else %}
-
-  <p>
-    You don't have any incoming adoption requests.
-  </p>
-
-{% endif %}
+</div>
 
 {% endblock %}

@@ -4,54 +4,291 @@
 {{ g.user.username }} | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>{{ g.user.first_name }} {{ g.user.last_name }}</h1>
+<div class="container page-container">
 
-<p>
-  <strong>Username:</strong>
-  {{ g.user.username }}
-</p>
 
-<p>
-  <strong>Email:</strong>
-  {{ g.user.email }}
-</p>
+  <!-- PROFILE HEADER -->
 
-{% if g.user.bio %}
-  <p>
-    <strong>About:</strong>
-    {{ g.user.bio }}
-  </p>
-{% endif %}
+  <div class="profile-header">
 
-{% if g.user.city or g.user.state %}
-  <p>
-    <strong>Location:</strong>
-    {{ g.user.city }}
-    {% if g.user.city and g.user.state %},{% endif %}
-    {{ g.user.state }}
-  </p>
-{% endif %}
+    <div
+      class="d-flex
+             flex-column
+             flex-md-row
+             justify-content-between
+             align-items-md-center
+             gap-3"
+    >
 
-<h2>My Dogs</h2>
+      <div>
 
-<p>
-  <a href="/dogs/add">Add a Dog</a>
-</p>
+        {% if g.user.account_type == "shelter"
+              and g.user.shelter_profile %}
 
-{% if g.user.dogs %}
-  <ul>
-    {% for dog in g.user.dogs %}
-      <li>
-        <a href="{{ url_for('dog_detail', dog_id=dog.id) }}">
-        {{ dog.name }}
+          <span class="status-badge status-approved mb-2">
+            Shelter / Rescue
+          </span>
+
+          <h1 class="profile-name">
+            {{ g.user.shelter_profile.name }}
+          </h1>
+
+          <p class="profile-info mb-1">
+            Managed by
+            {{ g.user.first_name }}
+            {{ g.user.last_name }}
+          </p>
+
+        {% else %}
+
+          <span class="status-badge status-completed mb-2">
+            PawMatch Member
+          </span>
+
+          <h1 class="profile-name">
+            {{ g.user.first_name }}
+            {{ g.user.last_name }}
+          </h1>
+
+        {% endif %}
+
+
+        <p class="profile-info mb-1">
+          @{{ g.user.username }}
+        </p>
+
+
+        {% if g.user.bio %}
+          <p class="mt-3 mb-1">
+            {{ g.user.bio }}
+          </p>
+        {% endif %}
+
+
+        {% if g.user.account_type == "shelter"
+              and g.user.shelter_profile %}
+
+          {% if g.user.shelter_profile.city
+                or g.user.shelter_profile.state %}
+
+            <p class="profile-info mb-1">
+              📍
+              {{ g.user.shelter_profile.city }}
+
+              {% if g.user.shelter_profile.city
+                    and g.user.shelter_profile.state %}
+                ,
+              {% endif %}
+
+              {{ g.user.shelter_profile.state }}
+            </p>
+
+          {% endif %}
+
+        {% elif g.user.city or g.user.state %}
+
+          <p class="profile-info mb-1">
+            📍
+            {{ g.user.city }}
+
+            {% if g.user.city and g.user.state %}
+              ,
+            {% endif %}
+
+            {{ g.user.state }}
+          </p>
+
+        {% endif %}
+
+      </div>
+
+
+      <div>
+
+        <a
+          href="{{ url_for('add_dog') }}"
+          class="btn pawmatch-btn"
+        >
+          + Add a Dog
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- DOGS -->
+
+  <div class="mb-4">
+
+    {% if g.user.account_type == "shelter" %}
+      <h2 class="section-title">
+        Our Dogs
+      </h2>
+    {% else %}
+      <h2 class="section-title">
+        My Dogs
+      </h2>
+    {% endif %}
+
+  </div>
+
+
+  {% if profile_dogs %}
+
+    <div class="row g-4">
+
+      {% for dog in profile_dogs %}
+
+        <div class="col-md-6 col-lg-4">
+
+          <div class="dog-card">
+
+            {% if dog.image_url %}
+
+              <img
+                src="{{ dog.image_url }}"
+                alt="{{ dog.name }}"
+                class="dog-image"
+              >
+
+            {% else %}
+
+              <div class="dog-placeholder">
+                🐶
+              </div>
+
+            {% endif %}
+
+
+            <div class="dog-card-body">
+
+              <div
+                class="d-flex
+                       justify-content-between
+                       align-items-start"
+              >
+
+                <h3 class="dog-name">
+                  {{ dog.name }}
+                </h3>
+
+
+                {% if dog.is_adoptable %}
+
+                  <span
+                    class="status-badge
+                           status-approved"
+                  >
+                    Adoptable
+                  </span>
+
+                {% endif %}
+
+              </div>
+
+
+              {% if dog.breed %}
+                <p class="dog-meta mb-1">
+                  🐾 {{ dog.breed }}
+                </p>
+              {% endif %}
+
+
+              {% if dog.age is not none %}
+                <p class="dog-meta mb-1">
+                  🎂 {{ dog.age }}
+
+                  {% if dog.age == 1 %}
+                    year old
+                  {% else %}
+                    years old
+                  {% endif %}
+                </p>
+              {% endif %}
+
+
+              {% if dog.city or dog.state %}
+
+                <p class="dog-meta mb-3">
+                  📍
+                  {{ dog.city }}
+
+                  {% if dog.city and dog.state %}
+                    ,
+                  {% endif %}
+
+                  {{ dog.state }}
+                </p>
+
+              {% endif %}
+
+
+              <a
+                href="{{ url_for(
+                  'dog_detail',
+                  dog_id=dog.id
+                ) }}"
+                class="btn pawmatch-btn w-100"
+              >
+                View {{ dog.name }}
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      {% endfor %}
+
+    </div>
+
+
+  {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        🐶
+      </div>
+
+      {% if g.user.account_type == "shelter" %}
+
+        <h2>No dogs listed yet</h2>
+
+        <p>
+          Add your first dog to begin creating
+          adoption listings.
+        </p>
+
+      {% else %}
+
+        <h2>No dogs yet</h2>
+
+        <p>
+          Add your first dog to start using
+          PawMatch's social features.
+        </p>
+
+      {% endif %}
+
+      <a
+        href="{{ url_for('add_dog') }}"
+        class="btn pawmatch-btn"
+      >
+        Add a Dog
       </a>
-    </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>You haven't added any dogs yet.</p>
-{% endif %}
+
+    </div>
+
+  {% endif %}
+
+</div>
 
 {% endblock %}

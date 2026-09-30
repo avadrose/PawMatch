@@ -6,68 +6,290 @@ Register | PawMatch
 
 {% block content %}
 
-<h1>Create Your PawMatch Account</h1>
+<div class="container">
 
-<form method="POST">
+  <div class="pawmatch-card form-card">
 
-  {{ form.hidden_tag() }}
+    <div class="text-center mb-4">
+      <div class="fs-1">🐾</div>
 
-  <div>
-    {{ form.username.label }}
-    {{ form.username() }}
+      <h1 class="auth-heading">
+        Join PawMatch
+      </h1>
 
-    {% for error in form.username.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
+      <p class="text-muted">
+        Create an individual or shelter/rescue account.
+      </p>
+    </div>
+
+
+    <form method="POST">
+
+      {{ form.hidden_tag() }}
+
+
+      <div class="mb-3">
+
+        {{ form.account_type.label(
+          class="form-label"
+        ) }}
+
+        {{ form.account_type(
+          class="form-select",
+          id="account-type"
+        ) }}
+
+      </div>
+
+
+      <div class="mb-3">
+
+        {{ form.username.label(
+          class="form-label"
+        ) }}
+
+        {{ form.username(
+          class="form-control"
+        ) }}
+
+        {% for error in form.username.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      <div class="mb-3">
+
+        {{ form.email.label(
+          class="form-label"
+        ) }}
+
+        {{ form.email(
+          class="form-control"
+        ) }}
+
+        {% for error in form.email.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      <div class="row">
+
+        <div class="col-md-6 mb-3">
+
+          {{ form.first_name.label(
+            class="form-label"
+          ) }}
+
+          {{ form.first_name(
+            class="form-control"
+          ) }}
+
+        </div>
+
+        <div class="col-md-6 mb-3">
+
+          {{ form.last_name.label(
+            class="form-label"
+          ) }}
+
+          {{ form.last_name(
+            class="form-control"
+          ) }}
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="shelter-fields"
+        style="display: none;"
+      >
+
+        <hr>
+
+        <h3 class="mb-3">
+          Shelter / Rescue Information
+        </h3>
+
+
+        <div class="mb-3">
+
+          {{ form.shelter_name.label(
+            class="form-label"
+          ) }}
+
+          {{ form.shelter_name(
+            class="form-control"
+          ) }}
+
+        </div>
+
+
+        <div class="mb-3">
+
+          {{ form.shelter_phone.label(
+            class="form-label"
+          ) }}
+
+          {{ form.shelter_phone(
+            class="form-control"
+          ) }}
+
+        </div>
+
+
+        <div class="mb-3">
+
+          {{ form.shelter_website.label(
+            class="form-label"
+          ) }}
+
+          {{ form.shelter_website(
+            class="form-control"
+          ) }}
+
+        </div>
+
+
+        <div class="mb-3">
+
+          {{ form.shelter_address.label(
+            class="form-label"
+          ) }}
+
+          {{ form.shelter_address(
+            class="form-control"
+          ) }}
+
+        </div>
+
+
+        <div class="row">
+
+          <div class="col-md-7 mb-3">
+
+            {{ form.shelter_city.label(
+              class="form-label"
+            ) }}
+
+            {{ form.shelter_city(
+              class="form-control"
+            ) }}
+
+          </div>
+
+
+          <div class="col-md-5 mb-3">
+
+            {{ form.shelter_state.label(
+              class="form-label"
+            ) }}
+
+            {{ form.shelter_state(
+              class="form-control"
+            ) }}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="mb-3">
+
+        {{ form.password.label(
+          class="form-label"
+        ) }}
+
+        {{ form.password(
+          class="form-control"
+        ) }}
+
+        {% for error in form.password.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      <div class="mb-4">
+
+        {{ form.confirm_password.label(
+          class="form-label"
+        ) }}
+
+        {{ form.confirm_password(
+          class="form-control"
+        ) }}
+
+        {% for error in form.confirm_password.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+
+      </div>
+
+
+      {{ form.submit(
+        class="btn pawmatch-btn w-100"
+      ) }}
+
+    </form>
+
+
+    <p class="text-center mt-4 mb-0">
+      Already have an account?
+
+      <a href="{{ url_for('login') }}">
+        Log In
+      </a>
+    </p>
+
   </div>
 
-  <div>
-    {{ form.email.label }}
-    {{ form.email() }}
+</div>
 
-    {% for error in form.email.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
 
-  <div>
-    {{ form.first_name.label }}
-    {{ form.first_name() }}
+<script>
 
-    {% for error in form.first_name.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
+  const accountType =
+    document.getElementById("account-type");
 
-  <div>
-    {{ form.last_name.label }}
-    {{ form.last_name() }}
+  const shelterFields =
+    document.getElementById("shelter-fields");
 
-    {% for error in form.last_name.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
 
-  <div>
-    {{ form.password.label }}
-    {{ form.password() }}
+  function updateAccountFields() {
 
-    {% for error in form.password.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
+    if (accountType.value === "shelter") {
+      shelterFields.style.display = "block";
+    } else {
+      shelterFields.style.display = "none";
+    }
 
-  <div>
-    {{ form.confirm_password.label }}
-    {{ form.confirm_password() }}
+  }
 
-    {% for error in form.confirm_password.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
-  </div>
 
-  {{ form.submit() }}
+  accountType.addEventListener(
+    "change",
+    updateAccountFields
+  );
 
-</form>
+  updateAccountFields();
+
+</script>
 
 {% endblock %}

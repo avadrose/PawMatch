@@ -4,48 +4,129 @@
 Adopt {{ dog.name }} | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>Adoption Request for {{ dog.name }}</h1>
+<div class="container">
 
-{% if dog.image_url %}
-  <img
-    src="{{ dog.image_url }}"
-    alt="{{ dog.name }}"
-    width="250"
-  >
-{% endif %}
+  <div class="pawmatch-card form-card">
 
-<p>
-  Tell the owner or rescue a little about yourself and why
-  you're interested in adopting {{ dog.name }}.
-</p>
+    <div class="text-center mb-4">
 
-<form method="POST">
+      <div class="fs-1">
+        🏠🐾
+      </div>
 
-  {{ form.hidden_tag() }}
+      <h1 class="auth-heading">
+        Adoption Request
+      </h1>
 
-  <div>
-    {{ form.message.label }}
+      <p class="text-muted">
+        Tell the owner or rescue why
+        {{ dog.name }} could be a great fit for you.
+      </p>
 
-    {{ form.message(
-      rows=6,
-      placeholder="Tell us why you think this dog would be a good fit..."
-    ) }}
+    </div>
 
-    {% for error in form.message.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
+
+    {% if dog.image_url %}
+
+      <img
+        src="{{ dog.image_url }}"
+        alt="{{ dog.name }}"
+        class="dog-detail-image mb-4"
+      >
+
+    {% endif %}
+
+
+    <div class="text-center mb-4">
+
+      <h2>
+        {{ dog.name }}
+      </h2>
+
+      {% if dog.breed %}
+        <p class="text-muted mb-1">
+          🐾 {{ dog.breed }}
+        </p>
+      {% endif %}
+
+
+      {% if dog.shelter %}
+
+        <p class="text-muted">
+          Listed by
+          <strong>
+            {{ dog.shelter.name }}
+          </strong>
+        </p>
+
+      {% elif dog.owner %}
+
+        <p class="text-muted">
+          Listed by
+          <strong>
+            @{{ dog.owner.username }}
+          </strong>
+        </p>
+
+      {% endif %}
+
+    </div>
+
+
+    <form method="POST">
+
+      {{ form.hidden_tag() }}
+
+
+      <div class="mb-4">
+
+        {{ form.message.label(
+          class="form-label"
+        ) }}
+
+        {{ form.message(
+          class="form-control",
+          rows=6,
+          placeholder="Tell us a little about yourself, your home, and why you're interested in this dog..."
+        ) }}
+
+
+        {% for error in form.message.errors %}
+
+          <div class="form-error">
+            {{ error }}
+          </div>
+
+        {% endfor %}
+
+      </div>
+
+
+      {{ form.submit(
+        class="btn pawmatch-btn w-100"
+      ) }}
+
+    </form>
+
+
+    <div class="text-center mt-3">
+
+      <a
+        href="{{ url_for(
+          'dog_detail',
+          dog_id=dog.id
+        ) }}"
+      >
+        ← Back to {{ dog.name }}
+      </a>
+
+    </div>
+
   </div>
 
-  {{ form.submit() }}
-
-</form>
-
-<p>
-  <a href="{{ url_for('dog_detail', dog_id=dog.id) }}">
-    Back to {{ dog.name }}
-  </a>
-</p>
+</div>
 
 {% endblock %}

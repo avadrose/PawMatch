@@ -4,48 +4,96 @@
 Messages | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>Messages</h1>
+<div class="container page-container">
 
-{% if messages %}
+  <div class="page-header">
 
-  {% for message in messages %}
+    <h1>Messages</h1>
 
-    <div>
+    <p class="page-subtitle">
+      Keep in touch with dog owners, adopters,
+      shelters, and rescues.
+    </p>
 
-      <p>
-        <strong>From:</strong>
-        {{ message.sender.username }}
-      </p>
+  </div>
 
-      <p>
-        {{ message.body }}
-      </p>
 
-      <p>
-        {{ message.created_at.strftime("%B %d, %Y at %I:%M %p") }}
-      </p>
+  {% if messages %}
 
-      <p>
-        <a href="{{ url_for(
-          'send_message',
-          user_id=message.sender.id
-        ) }}">
-          Reply
+    {% for message in messages %}
+
+      <div class="message-card">
+
+        <div
+          class="d-flex
+                 flex-column
+                 flex-md-row
+                 justify-content-between
+                 gap-2"
+        >
+
+          <div>
+
+            <p class="message-sender mb-1">
+              From @{{ message.sender.username }}
+            </p>
+
+            <p class="message-date mb-0">
+              {{ message.created_at.strftime(
+                "%B %d, %Y at %I:%M %p"
+              ) }}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <hr>
+
+
+        <p class="mb-3">
+          {{ message.body }}
+        </p>
+
+
+        <a
+          href="{{ url_for(
+            'send_message',
+            user_id=message.sender.id
+          ) }}"
+          class="btn pawmatch-btn-secondary"
+        >
+          💬 Reply
         </a>
+
+      </div>
+
+    {% endfor %}
+
+
+  {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        💬
+      </div>
+
+      <h2>No messages yet</h2>
+
+      <p>
+        Messages from other PawMatch members
+        will appear here.
       </p>
 
     </div>
 
-    <hr>
+  {% endif %}
 
-  {% endfor %}
-
-{% else %}
-
-  <p>You don't have any messages yet.</p>
-
-{% endif %}
+</div>
 
 {% endblock %}

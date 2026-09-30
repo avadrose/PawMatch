@@ -4,29 +4,75 @@
 Message {{ recipient.username }} | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>Message {{ recipient.username }}</h1>
+<div class="container">
 
-<form method="POST">
+  <div class="pawmatch-card form-card">
 
-  {{ form.hidden_tag() }}
+    <div class="text-center mb-4">
 
-  <div>
-    {{ form.body.label }}
+      <div class="fs-1">
+        💬
+      </div>
 
-    {{ form.body(
-      rows=6,
-      placeholder="Write your message..."
-    ) }}
+      <h1 class="auth-heading">
+        Message {{ recipient.username }}
+      </h1>
 
-    {% for error in form.body.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
+      <p class="text-muted">
+        Send a private PawMatch message.
+      </p>
+
+    </div>
+
+
+    <form method="POST">
+
+      {{ form.hidden_tag() }}
+
+
+      <div class="mb-4">
+
+        {{ form.body.label(
+          class="form-label"
+        ) }}
+
+        {{ form.body(
+          class="form-control",
+          rows=6,
+          placeholder="Write your message..."
+        ) }}
+
+        {% for error in form.body.errors %}
+
+          <div class="form-error">
+            {{ error }}
+          </div>
+
+        {% endfor %}
+
+      </div>
+
+
+      {{ form.submit(
+        class="btn pawmatch-btn w-100"
+      ) }}
+
+    </form>
+
+
+    <div class="text-center mt-3">
+
+      <a href="{{ url_for('messages') }}">
+        Back to Messages
+      </a>
+
+    </div>
+
   </div>
 
-  {{ form.submit() }}
-
-</form>
+</div>
 
 {% endblock %}

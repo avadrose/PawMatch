@@ -6,171 +6,369 @@ Adopt a Dog | PawMatch
 
 {% block content %}
 
-<h1>Dogs Available for Adoption</h1>
+<div class="container page-container">
 
-<form method="GET" action="{{ url_for('adoptable_dogs') }}">
+  <div class="page-header text-center">
+    <h1>Find Your Perfect Match</h1>
 
-  <div>
-    <label for="breed">Breed</label>
+    <p class="page-subtitle">
+      Browse dogs currently looking for their forever homes.
+    </p>
+  </div>
 
-    <input
-      type="text"
-      id="breed"
-      name="breed"
-      value="{{ breed }}"
-      placeholder="e.g. Husky"
+
+  <!-- FILTERS -->
+  <div class="filter-card">
+
+    <form
+      method="GET"
+      action="{{ url_for('adoptable_dogs') }}"
     >
+
+      <div class="row g-3">
+
+        <div class="col-md-4">
+
+          <label
+            for="breed"
+            class="form-label"
+          >
+            Breed
+          </label>
+
+          <input
+            type="text"
+            id="breed"
+            name="breed"
+            value="{{ breed }}"
+            class="form-control"
+            placeholder="e.g. Husky"
+          >
+
+        </div>
+
+
+        <div class="col-md-2">
+
+          <label
+            for="size"
+            class="form-label"
+          >
+            Size
+          </label>
+
+          <select
+            id="size"
+            name="size"
+            class="form-select"
+          >
+
+            <option value="">
+              Any Size
+            </option>
+
+            <option
+              value="Small"
+              {% if size == "Small" %}
+                selected
+              {% endif %}
+            >
+              Small
+            </option>
+
+            <option
+              value="Medium"
+              {% if size == "Medium" %}
+                selected
+              {% endif %}
+            >
+              Medium
+            </option>
+
+            <option
+              value="Large"
+              {% if size == "Large" %}
+                selected
+              {% endif %}
+            >
+              Large
+            </option>
+
+            <option
+              value="Extra Large"
+              {% if size == "Extra Large" %}
+                selected
+              {% endif %}
+            >
+              Extra Large
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="col-md-2">
+
+          <label
+            for="sex"
+            class="form-label"
+          >
+            Sex
+          </label>
+
+          <select
+            id="sex"
+            name="sex"
+            class="form-select"
+          >
+
+            <option value="">
+              Any
+            </option>
+
+            <option
+              value="Male"
+              {% if sex == "Male" %}
+                selected
+              {% endif %}
+            >
+              Male
+            </option>
+
+            <option
+              value="Female"
+              {% if sex == "Female" %}
+                selected
+              {% endif %}
+            >
+              Female
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+          <label
+            for="location"
+            class="form-label"
+          >
+            Location
+          </label>
+
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value="{{ location }}"
+            class="form-control"
+            placeholder="City or state"
+          >
+
+        </div>
+
+
+        <div class="col-md-8">
+
+          <label
+            for="temperament"
+            class="form-label"
+          >
+            Temperament
+          </label>
+
+          <input
+            type="text"
+            id="temperament"
+            name="temperament"
+            value="{{ temperament }}"
+            class="form-control"
+            placeholder="e.g. friendly, calm, playful"
+          >
+
+        </div>
+
+
+        <div class="col-md-4 d-flex align-items-end">
+
+          <button
+            type="submit"
+            class="btn pawmatch-btn me-2"
+          >
+            Search
+          </button>
+
+          <a
+            href="{{ url_for('adoptable_dogs') }}"
+            class="btn pawmatch-btn-secondary"
+          >
+            Clear
+          </a>
+
+        </div>
+
+      </div>
+
+    </form>
+
   </div>
 
-  <div>
-    <label for="size">Size</label>
 
-    <select id="size" name="size">
-      <option value="">Any size</option>
+  <!-- DOG LIST -->
+  {% if dogs %}
 
-      <option value="Small"
-        {% if size == "Small" %}selected{% endif %}>
-        Small
-      </option>
+    <div class="row g-4">
 
-      <option value="Medium"
-        {% if size == "Medium" %}selected{% endif %}>
-        Medium
-      </option>
+      {% for dog in dogs %}
 
-      <option value="Large"
-        {% if size == "Large" %}selected{% endif %}>
-        Large
-      </option>
+        <div class="col-md-6 col-lg-4">
 
-      <option value="Extra Large"
-        {% if size == "Extra Large" %}selected{% endif %}>
-        Extra Large
-      </option>
-    </select>
-  </div>
+          <div class="dog-card">
 
-  <div>
-    <label for="sex">Sex</label>
+            {% if dog.image_url %}
 
-    <select id="sex" name="sex">
-      <option value="">Any</option>
+              <img
+                src="{{ dog.image_url }}"
+                alt="{{ dog.name }}"
+                class="dog-image"
+              >
 
-      <option value="Male"
-        {% if sex == "Male" %}selected{% endif %}>
-        Male
-      </option>
+            {% else %}
 
-      <option value="Female"
-        {% if sex == "Female" %}selected{% endif %}>
-        Female
-      </option>
-    </select>
-  </div>
+              <div class="dog-placeholder">
+                🐶
+              </div>
 
-  <div>
-    <label for="location">Location</label>
+            {% endif %}
 
-    <input
-      type="text"
-      id="location"
-      name="location"
-      value="{{ location }}"
-      placeholder="City or state"
-    >
-  </div>
 
-  <div>
-    <label for="temperament">Temperament</label>
+            <div class="dog-card-body">
 
-    <input
-      type="text"
-      id="temperament"
-      name="temperament"
-      value="{{ temperament }}"
-      placeholder="e.g. friendly"
-    >
-  </div>
+              <h2 class="dog-name">
+                {{ dog.name }}
+              </h2>
 
-  <button type="submit">
-    Search
-  </button>
 
-  <a href="{{ url_for('adoptable_dogs') }}">
-    Clear Filters
-  </a>
+              {% if dog.breed %}
+                <p class="dog-meta mb-1">
+                  🐾 {{ dog.breed }}
+                </p>
+              {% endif %}
 
-</form>
 
-<hr>
+              {% if dog.age is not none %}
+                <p class="dog-meta mb-1">
+                  🎂 {{ dog.age }}
+                  {% if dog.age == 1 %}
+                    year old
+                  {% else %}
+                    years old
+                  {% endif %}
+                </p>
+              {% endif %}
 
-{% if dogs %}
 
-  {% for dog in dogs %}
+              {% if dog.size %}
+                <p class="dog-meta mb-1">
+                  📏 {{ dog.size }}
+                </p>
+              {% endif %}
 
-    <div>
 
-      {% if dog.image_url %}
-        <img
-          src="{{ dog.image_url }}"
-          alt="{{ dog.name }}"
-          width="250"
-        >
-      {% endif %}
+              {% if dog.sex %}
+                <p class="dog-meta mb-1">
+                  {{ dog.sex }}
+                </p>
+              {% endif %}
 
-      <h2>
-        <a href="{{ url_for('dog_detail', dog_id=dog.id) }}">
-          {{ dog.name }}
-        </a>
-      </h2>
 
-      {% if dog.breed %}
-        <p>
-          <strong>Breed:</strong>
-          {{ dog.breed }}
-        </p>
-      {% endif %}
+              {% if dog.city or dog.state %}
 
-      {% if dog.age is not none %}
-        <p>
-          <strong>Age:</strong>
-          {{ dog.age }}
-        </p>
-      {% endif %}
+                <p class="dog-meta mb-3">
+                  📍
 
-      {% if dog.size %}
-        <p>
-          <strong>Size:</strong>
-          {{ dog.size }}
-        </p>
-      {% endif %}
+                  {{ dog.city }}
 
-      {% if dog.city or dog.state %}
-        <p>
-          <strong>Location:</strong>
+                  {% if dog.city and dog.state %}
+                    ,
+                  {% endif %}
 
-          {{ dog.city }}
+                  {{ dog.state }}
+                </p>
 
-          {% if dog.city and dog.state %}
-            ,
-          {% endif %}
+              {% endif %}
 
-          {{ dog.state }}
-        </p>
-      {% endif %}
+
+              {% if dog.shelter %}
+
+                <p class="small text-muted">
+                  Listed by
+                  <strong>
+                    {{ dog.shelter.name }}
+                  </strong>
+                </p>
+
+              {% elif dog.owner %}
+
+                <p class="small text-muted">
+                  Listed by
+                  <strong>
+                    {{ dog.owner.username }}
+                  </strong>
+                </p>
+
+              {% endif %}
+
+
+              <a
+                href="{{ url_for(
+                  'dog_detail',
+                  dog_id=dog.id
+                ) }}"
+                class="btn pawmatch-btn w-100"
+              >
+                Meet {{ dog.name }}
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      {% endfor %}
 
     </div>
 
-    <hr>
 
-  {% endfor %}
+  {% else %}
 
-{% else %}
+    <div class="empty-state">
 
-  <p>
-    There are currently no dogs available for adoption.
-  </p>
+      <div class="empty-state-icon">
+        🐾
+      </div>
 
-{% endif %}
+      <h2>No matches found</h2>
+
+      <p>
+        Try changing your filters to find more dogs.
+      </p>
+
+      <a
+        href="{{ url_for('adoptable_dogs') }}"
+        class="btn pawmatch-btn"
+      >
+        View All Dogs
+      </a>
+
+    </div>
+
+  {% endif %}
+
+</div>
 
 {% endblock %}

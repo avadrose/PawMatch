@@ -4,52 +4,124 @@
 My Adoption Requests | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>My Adoption Requests</h1>
+<div class="container page-container">
 
-{% if adoption_requests %}
+  <div class="page-header">
 
-  {% for adoption_request in adoption_requests %}
+    <h1>My Adoption Requests</h1>
 
-    <div>
+    <p class="page-subtitle">
+      Keep track of the dogs you've asked about adopting.
+    </p>
 
-      <h2>
-        <a href="{{ url_for(
-          'dog_detail',
-          dog_id=adoption_request.dog.id
-        ) }}">
-          {{ adoption_request.dog.name }}
-        </a>
-      </h2>
+  </div>
+
+
+  {% if adoption_requests %}
+
+    {% for adoption_request in adoption_requests %}
+
+      <div class="request-card">
+
+        <div
+          class="d-flex
+                 flex-column
+                 flex-md-row
+                 justify-content-between
+                 align-items-md-start
+                 gap-3"
+        >
+
+          <div>
+
+            <h2 class="mb-2">
+
+              <a
+                href="{{ url_for(
+                  'dog_detail',
+                  dog_id=adoption_request.dog.id
+                ) }}"
+              >
+                {{ adoption_request.dog.name }}
+              </a>
+
+            </h2>
+
+
+            {% if adoption_request.dog.breed %}
+
+              <p class="text-muted mb-2">
+                🐾 {{ adoption_request.dog.breed }}
+              </p>
+
+            {% endif %}
+
+          </div>
+
+
+          <span
+            class="status-badge
+                   status-{{ adoption_request.status }}"
+          >
+            {{ adoption_request.status|title }}
+          </span>
+
+        </div>
+
+
+        <hr>
+
+
+        <p>
+          <strong>Your Message:</strong>
+        </p>
+
+        <p>
+          {{ adoption_request.message }}
+        </p>
+
+
+        <p class="text-muted small mb-0">
+          Submitted
+          {{ adoption_request.created_at.strftime(
+            "%B %d, %Y at %I:%M %p"
+          ) }}
+        </p>
+
+      </div>
+
+    {% endfor %}
+
+
+  {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        🏠
+      </div>
+
+      <h2>No adoption requests yet</h2>
 
       <p>
-        <strong>Status:</strong>
-        {{ adoption_request.status|title }}
+        When you ask about adopting a dog,
+        your request will appear here.
       </p>
 
-      <p>
-        <strong>Message:</strong>
-        {{ adoption_request.message }}
-      </p>
-
-      <p>
-        <strong>Submitted:</strong>
-        {{ adoption_request.created_at.strftime("%B %d, %Y at %I:%M %p") }}
-      </p>
+      <a
+        href="{{ url_for('adoptable_dogs') }}"
+        class="btn pawmatch-btn"
+      >
+        Browse Adoptable Dogs
+      </a>
 
     </div>
 
-    <hr>
+  {% endif %}
 
-  {% endfor %}
-
-{% else %}
-
-  <p>
-    You haven't submitted any adoption requests yet.
-  </p>
-
-{% endif %}
+</div>
 
 {% endblock %}

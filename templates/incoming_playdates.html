@@ -4,98 +4,184 @@
 Incoming Playdates | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>Incoming Playdate Requests</h1>
+<div class="container page-container">
 
-{% if playdate_requests %}
+  <div class="page-header">
 
-  {% for playdate in playdate_requests %}
+    <h1>Incoming Playdate Requests</h1>
 
-    <div>
+    <p class="page-subtitle">
+      Review playdate requests sent to your dogs.
+    </p>
 
-      <h2>
-        {{ playdate.requester_dog.name }}
-        wants to meet
-        {{ playdate.recipient_dog.name }}
-      </h2>
+  </div>
 
-      <p>
-        <strong>From:</strong>
-        {{ playdate.requester_dog.owner.username }}
-      </p>
 
-      <p>
-        <strong>Date:</strong>
-        {{ playdate.date }}
-      </p>
+  {% if playdate_requests %}
 
-      <p>
-        <strong>Time:</strong>
-        {{ playdate.time.strftime("%I:%M %p") }}
-      </p>
+    {% for playdate in playdate_requests %}
 
-      <p>
-        <strong>Location:</strong>
-        {{ playdate.location }}
-      </p>
+      <div class="request-card">
 
-      {% if playdate.message %}
+        <div
+          class="d-flex
+                 flex-column
+                 flex-md-row
+                 justify-content-between
+                 align-items-md-start
+                 gap-3"
+        >
+
+          <div>
+
+            <h2 class="mb-2">
+              {{ playdate.requester_dog.name }}
+              wants to meet
+              {{ playdate.recipient_dog.name }}
+            </h2>
+
+
+            {% if playdate.requester_dog.owner %}
+
+              <p class="text-muted mb-0">
+                From
+                @{{ playdate.requester_dog.owner.username }}
+              </p>
+
+            {% endif %}
+
+          </div>
+
+
+          <span
+            class="status-badge
+                   status-{{ playdate.status }}"
+          >
+            {{ playdate.status|title }}
+          </span>
+
+        </div>
+
+
+        <hr>
+
+
+        <div class="row">
+
+          <div class="col-md-6">
+
+            <p>
+              <strong>Date:</strong><br>
+              {{ playdate.date.strftime("%B %d, %Y") }}
+            </p>
+
+          </div>
+
+
+          <div class="col-md-6">
+
+            <p>
+              <strong>Time:</strong><br>
+              {{ playdate.time.strftime("%I:%M %p") }}
+            </p>
+
+          </div>
+
+        </div>
+
+
         <p>
-          <strong>Message:</strong>
-          {{ playdate.message }}
+          <strong>Location:</strong><br>
+          📍 {{ playdate.location }}
         </p>
-      {% endif %}
+
+
+        {% if playdate.message %}
+
+          <p>
+            <strong>Message:</strong>
+          </p>
+
+          <p>
+            {{ playdate.message }}
+          </p>
+
+        {% endif %}
+
+
+        {% if playdate.status == "pending" %}
+
+          <div class="action-group">
+
+            <form
+              method="POST"
+              action="{{ url_for(
+                'accept_playdate',
+                request_id=playdate.id
+              ) }}"
+            >
+
+              {{ decision_form.hidden_tag() }}
+
+              <button
+                type="submit"
+                class="btn pawmatch-btn"
+              >
+                ✓ Accept
+              </button>
+
+            </form>
+
+
+            <form
+              method="POST"
+              action="{{ url_for(
+                'decline_playdate',
+                request_id=playdate.id
+              ) }}"
+            >
+
+              {{ decision_form.hidden_tag() }}
+
+              <button
+                type="submit"
+                class="btn pawmatch-btn-danger"
+              >
+                Decline
+              </button>
+
+            </form>
+
+          </div>
+
+        {% endif %}
+
+      </div>
+
+    {% endfor %}
+
+
+  {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-state-icon">
+        🐾
+      </div>
+
+      <h2>No incoming playdates</h2>
 
       <p>
-        <strong>Status:</strong>
-        {{ playdate.status|title }}
+        Requests from other dog owners will appear here.
       </p>
-
-      {% if playdate.status == "pending" %}
-
-  <form
-    method="POST"
-    action="{{ url_for(
-      'accept_playdate',
-      request_id=playdate.id
-    ) }}"
-  >
-    {{ decision_form.hidden_tag() }}
-
-    <button type="submit">
-      Accept
-    </button>
-  </form>
-
-  <form
-    method="POST"
-    action="{{ url_for(
-      'decline_playdate',
-      request_id=playdate.id
-    ) }}"
-  >
-    {{ decision_form.hidden_tag() }}
-
-    <button type="submit">
-      Decline
-    </button>
-  </form>
-
-{% endif %}
 
     </div>
 
-    <hr>
+  {% endif %}
 
-  {% endfor %}
-
-{% else %}
-
-  <p>
-    You don't have any incoming playdate requests.
-  </p>
-
-{% endif %}
+</div>
 
 {% endblock %}

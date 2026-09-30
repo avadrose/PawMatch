@@ -4,61 +4,165 @@
 My Favorites | PawMatch
 {% endblock %}
 
+
 {% block content %}
 
-<h1>My Favorite Dogs</h1>
+<div class="container page-container">
 
-{% if favorites %}
+  <div class="page-header">
 
-  {% for favorite in favorites %}
+    <h1>My Favorite Dogs</h1>
 
-    <div>
+    <p class="page-subtitle">
+      Dogs you've saved while searching for your perfect match.
+    </p>
 
-      {% if favorite.dog.image_url %}
-        <img
-          src="{{ favorite.dog.image_url }}"
-          alt="{{ favorite.dog.name }}"
-          width="250"
-        >
-      {% endif %}
+  </div>
 
-      <h2>
-        <a href="{{ url_for('dog_detail', dog_id=favorite.dog.id) }}">
-          {{ favorite.dog.name }}
-        </a>
-      </h2>
 
-      {% if favorite.dog.breed %}
-        <p>
-          <strong>Breed:</strong>
-          {{ favorite.dog.breed }}
-        </p>
-      {% endif %}
+  {% if favorites %}
 
-      {% if favorite.dog.city or favorite.dog.state %}
-        <p>
-          <strong>Location:</strong>
+    <div class="row g-4">
 
-          {{ favorite.dog.city }}
+      {% for favorite in favorites %}
 
-          {% if favorite.dog.city and favorite.dog.state %}
-            ,
-          {% endif %}
+        <div class="col-md-6 col-lg-4">
 
-          {{ favorite.dog.state }}
-        </p>
-      {% endif %}
+          <div class="dog-card">
+
+            {% if favorite.dog.image_url %}
+
+              <img
+                src="{{ favorite.dog.image_url }}"
+                alt="{{ favorite.dog.name }}"
+                class="dog-image"
+              >
+
+            {% else %}
+
+              <div class="dog-placeholder">
+                🐶
+              </div>
+
+            {% endif %}
+
+
+            <div class="dog-card-body">
+
+              <h2 class="dog-name">
+                {{ favorite.dog.name }}
+              </h2>
+
+
+              {% if favorite.dog.breed %}
+
+                <p class="dog-meta mb-1">
+                  🐾 {{ favorite.dog.breed }}
+                </p>
+
+              {% endif %}
+
+
+              {% if favorite.dog.age is not none %}
+
+                <p class="dog-meta mb-1">
+                  🎂 {{ favorite.dog.age }}
+
+                  {% if favorite.dog.age == 1 %}
+                    year old
+                  {% else %}
+                    years old
+                  {% endif %}
+                </p>
+
+              {% endif %}
+
+
+              {% if favorite.dog.city or favorite.dog.state %}
+
+                <p class="dog-meta mb-3">
+                  📍
+
+                  {{ favorite.dog.city }}
+
+                  {% if favorite.dog.city and favorite.dog.state %}
+                    ,
+                  {% endif %}
+
+                  {{ favorite.dog.state }}
+                </p>
+
+              {% endif %}
+
+
+              {% if favorite.dog.shelter %}
+
+                <p class="small text-muted">
+                  Listed by
+                  <strong>
+                    {{ favorite.dog.shelter.name }}
+                  </strong>
+                </p>
+
+              {% elif favorite.dog.owner %}
+
+                <p class="small text-muted">
+                  Listed by
+                  <strong>
+                    {{ favorite.dog.owner.username }}
+                  </strong>
+                </p>
+
+              {% endif %}
+
+
+              <a
+                href="{{ url_for(
+                  'dog_detail',
+                  dog_id=favorite.dog.id
+                ) }}"
+                class="btn pawmatch-btn w-100"
+              >
+                View {{ favorite.dog.name }}
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      {% endfor %}
 
     </div>
 
-    <hr>
 
-  {% endfor %}
+  {% else %}
 
-{% else %}
+    <div class="empty-state">
 
-  <p>You haven't saved any dogs yet.</p>
+      <div class="empty-state-icon">
+        ♡
+      </div>
 
-{% endif %}
+      <h2>No favorites yet</h2>
+
+      <p>
+        Save dogs you're interested in and they'll
+        appear here.
+      </p>
+
+      <a
+        href="{{ url_for('adoptable_dogs') }}"
+        class="btn pawmatch-btn"
+      >
+        Browse Adoptable Dogs
+      </a>
+
+    </div>
+
+  {% endif %}
+
+</div>
 
 {% endblock %}

@@ -80,6 +80,19 @@ class User(db.Model):
         cascade="all, delete-orphan"
     )
 
+    account_type = db.Column(
+        db.String(20),
+        nullable=False,
+        default="individual"
+    )
+
+    shelter_profile = db.relationship(
+        "Shelter",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -126,6 +139,13 @@ class Shelter(db.Model):
     dogs = db.relationship(
         "Dog",
         backref="shelter"
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        unique=True,
+        nullable=True
     )
 
     def __repr__(self):

@@ -6,209 +6,419 @@
 
 {% block content %}
 
-<h1>{{ dog.name }}</h1>
+<div class="container page-container">
 
-{% if dog.image_url %}
-  <img
-    src="{{ dog.image_url }}"
-    alt="{{ dog.name }}"
-    width="300"
-  >
-{% endif %}
+  <div class="row g-4 align-items-start">
 
-{% if dog.breed %}
-  <p>
-    <strong>Breed:</strong>
-    {{ dog.breed }}
-  </p>
-{% endif %}
+    <!-- DOG IMAGE -->
+    <div class="col-lg-6">
 
-{% if dog.age is not none %}
-  <p>
-    <strong>Age:</strong>
-    {{ dog.age }}
-  </p>
-{% endif %}
+      {% if dog.image_url %}
 
-{% if dog.size %}
-  <p>
-    <strong>Size:</strong>
-    {{ dog.size }}
-  </p>
-{% endif %}
+        <img
+          src="{{ dog.image_url }}"
+          alt="{{ dog.name }}"
+          class="dog-detail-image"
+        >
 
-{% if dog.sex %}
-  <p>
-    <strong>Sex:</strong>
-    {{ dog.sex }}
-  </p>
-{% endif %}
+      {% else %}
 
-{% if dog.temperament %}
-  <p>
-    <strong>Temperament:</strong>
-    {{ dog.temperament }}
-  </p>
-{% endif %}
+        <div class="dog-placeholder dog-detail-image">
+          🐶
+        </div>
 
-{% if dog.description %}
-  <p>
-    <strong>About:</strong>
-    {{ dog.description }}
-  </p>
-{% endif %}
+      {% endif %}
 
-{% if dog.city or dog.state %}
-  <p>
-    <strong>Location:</strong>
-
-    {{ dog.city }}
-
-    {% if dog.city and dog.state %}
-      ,
-    {% endif %}
-
-    {{ dog.state }}
-  </p>
-{% endif %}
-
-{% if dog.is_adoptable %}
-  <p>
-    <strong>Available for adoption</strong>
-  </p>
-{% endif %}
-
-{% if dog.owner %}
-  <p>
-    <strong>Owner:</strong>
-    {{ dog.owner.username }}
-  </p>
-{% endif %}
-
-<a href="/profile">Back to Profile</a>
-
-{% if g.user and dog.owner_id == g.user.id %}
-
-  <p>
-    <a href="{{ url_for('edit_dog', dog_id=dog.id) }}">
-      Edit Dog
-    </a>
-  </p>
-
-  <form
-    method="POST"
-    action="{{ url_for('delete_dog', dog_id=dog.id) }}"
-  >
-    {{ delete_form.hidden_tag() }}
-
-    <button
-      type="submit"
-      onclick="return confirm('Are you sure you want to delete this dog?');"
-    >
-      Delete Dog
-    </button>
-  </form>
-
-{% endif %}
+    </div>
 
 
-{% if dog.is_adoptable %}
+    <!-- DOG INFORMATION -->
+    <div class="col-lg-6">
 
-  {% if g.user %}
+      <div class="pawmatch-card content-card">
 
-    {% if is_favorited %}
+        <div class="d-flex justify-content-between align-items-start mb-3">
 
-      <form
-        method="POST"
-        action="{{ url_for('unfavorite_dog', dog_id=dog.id) }}"
+          <div>
+
+            <h1 class="mb-1">
+              {{ dog.name }}
+            </h1>
+
+            {% if dog.is_adoptable %}
+
+              <span class="status-badge status-approved">
+                Available for Adoption
+              </span>
+
+            {% endif %}
+
+          </div>
+
+          <span class="fs-2">
+            🐾
+          </span>
+
+        </div>
+
+
+        {% if dog.breed %}
+          <p>
+            <span class="detail-label">Breed:</span>
+            {{ dog.breed }}
+          </p>
+        {% endif %}
+
+
+        {% if dog.age is not none %}
+          <p>
+            <span class="detail-label">Age:</span>
+
+            {{ dog.age }}
+
+            {% if dog.age == 1 %}
+              year
+            {% else %}
+              years
+            {% endif %}
+          </p>
+        {% endif %}
+
+
+        {% if dog.size %}
+          <p>
+            <span class="detail-label">Size:</span>
+            {{ dog.size }}
+          </p>
+        {% endif %}
+
+
+        {% if dog.sex %}
+          <p>
+            <span class="detail-label">Sex:</span>
+            {{ dog.sex }}
+          </p>
+        {% endif %}
+
+
+        {% if dog.temperament %}
+          <p>
+            <span class="detail-label">Temperament:</span>
+            {{ dog.temperament }}
+          </p>
+        {% endif %}
+
+
+        {% if dog.city or dog.state %}
+
+          <p>
+            <span class="detail-label">Location:</span>
+
+            📍 {{ dog.city }}
+
+            {% if dog.city and dog.state %}
+              ,
+            {% endif %}
+
+            {{ dog.state }}
+          </p>
+
+        {% endif %}
+
+
+        {% if dog.description %}
+
+          <hr>
+
+          <h3>About {{ dog.name }}</h3>
+
+          <p>
+            {{ dog.description }}
+          </p>
+
+        {% endif %}
+
+
+        <!-- WHO LISTED THE DOG -->
+
+        {% if dog.shelter %}
+
+          <hr>
+
+          <h3>Shelter / Rescue</h3>
+
+          <p class="mb-1">
+            <strong>
+              {{ dog.shelter.name }}
+            </strong>
+          </p>
+
+          {% if dog.shelter.city or dog.shelter.state %}
+
+            <p class="text-muted">
+
+              {{ dog.shelter.city }}
+
+              {% if dog.shelter.city and dog.shelter.state %}
+                ,
+              {% endif %}
+
+              {{ dog.shelter.state }}
+
+            </p>
+
+          {% endif %}
+
+
+          {% if dog.shelter.website_url %}
+
+            <p>
+              <a
+                href="{{ dog.shelter.website_url }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Visit Shelter Website
+              </a>
+            </p>
+
+          {% endif %}
+
+        {% elif dog.owner %}
+
+          <hr>
+
+          <p>
+            <span class="detail-label">Owner:</span>
+            {{ dog.owner.username }}
+          </p>
+
+        {% endif %}
+
+
+        <!-- ACTIONS -->
+
+        <div class="action-group">
+
+          <!-- FAVORITES -->
+
+          {% if dog.is_adoptable %}
+
+            {% if g.user %}
+
+              {% if is_favorited %}
+
+                <form
+                  method="POST"
+                  action="{{ url_for(
+                    'unfavorite_dog',
+                    dog_id=dog.id
+                  ) }}"
+                >
+
+                  {{ favorite_form.hidden_tag() }}
+
+                  <button
+                    type="submit"
+                    class="btn pawmatch-btn-secondary"
+                  >
+                    ♥ Remove Favorite
+                  </button>
+
+                </form>
+
+              {% else %}
+
+                <form
+                  method="POST"
+                  action="{{ url_for(
+                    'favorite_dog',
+                    dog_id=dog.id
+                  ) }}"
+                >
+
+                  {{ favorite_form.hidden_tag() }}
+
+                  <button
+                    type="submit"
+                    class="btn pawmatch-btn-secondary"
+                  >
+                    ♡ Save Favorite
+                  </button>
+
+                </form>
+
+              {% endif %}
+
+            {% endif %}
+
+          {% endif %}
+
+
+          <!-- ADOPTION REQUEST -->
+
+          {% if dog.is_adoptable and g.user and not can_manage %}
+
+            <a
+              href="{{ url_for(
+                'request_adoption',
+                dog_id=dog.id
+              ) }}"
+              class="btn pawmatch-btn"
+            >
+              🏠 Ask About Adoption
+            </a>
+
+          {% endif %}
+
+
+          <!-- PLAYDATE -->
+
+          {% if
+            g.user
+            and dog.owner
+            and dog.owner_id != g.user.id
+            and g.user.account_type != "shelter"
+          %}
+
+            <a
+              href="{{ url_for(
+                'request_playdate',
+                dog_id=dog.id
+              ) }}"
+              class="btn pawmatch-btn-secondary"
+            >
+              🐕 Request Playdate
+            </a>
+
+          {% endif %}
+
+
+          <!-- MESSAGE INDIVIDUAL OWNER -->
+
+          {% if
+            g.user
+            and dog.owner
+            and dog.owner_id != g.user.id
+          %}
+
+            <a
+              href="{{ url_for(
+                'send_message',
+                user_id=dog.owner.id
+              ) }}"
+              class="btn pawmatch-btn-secondary"
+            >
+              💬 Message Owner
+            </a>
+
+          {% endif %}
+
+
+          <!-- MESSAGE SHELTER -->
+
+          {% if
+            g.user
+            and dog.shelter
+            and dog.shelter.user
+            and dog.shelter.user.id != g.user.id
+          %}
+
+            <a
+              href="{{ url_for(
+                'send_message',
+                user_id=dog.shelter.user.id
+              ) }}"
+              class="btn pawmatch-btn-secondary"
+            >
+              💬 Message Shelter
+            </a>
+
+          {% endif %}
+
+        </div>
+
+
+        <!-- OWNER / SHELTER MANAGEMENT -->
+
+        {% if can_manage %}
+
+          <hr>
+
+          <h3>Manage Listing</h3>
+
+          <div class="action-group">
+
+            <a
+              href="{{ url_for(
+                'edit_dog',
+                dog_id=dog.id
+              ) }}"
+              class="btn pawmatch-btn-secondary"
+            >
+              ✏️ Edit Dog
+            </a>
+
+
+            <form
+              method="POST"
+              action="{{ url_for(
+                'delete_dog',
+                dog_id=dog.id
+              ) }}"
+            >
+
+              {{ delete_form.hidden_tag() }}
+
+              <button
+                type="submit"
+                class="btn pawmatch-btn-danger"
+                onclick="
+                  return confirm(
+                    'Are you sure you want to delete {{ dog.name }}?'
+                  );
+                "
+              >
+                Delete Dog
+              </button>
+
+            </form>
+
+          </div>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="mt-4">
+
+    {% if dog.is_adoptable %}
+
+      <a
+        href="{{ url_for('adoptable_dogs') }}"
+        class="btn pawmatch-btn-secondary"
       >
-        {{ favorite_form.hidden_tag() }}
-
-        <button type="submit">
-          Remove from Favorites
-        </button>
-      </form>
+        ← Back to Adoptable Dogs
+      </a>
 
     {% else %}
 
-      <form
-        method="POST"
-        action="{{ url_for('favorite_dog', dog_id=dog.id) }}"
+      <a
+        href="{{ url_for('profile') }}"
+        class="btn pawmatch-btn-secondary"
       >
-        {{ favorite_form.hidden_tag() }}
-
-        <button type="submit">
-          Save to Favorites
-        </button>
-      </form>
+        ← Back
+      </a>
 
     {% endif %}
 
-  {% else %}
+  </div>
 
-    <p>
-      <a href="{{ url_for('login') }}">
-        Log in to save this dog
-      </a>
-    </p>
-
-  {% endif %}
-
-  {% if dog.is_adoptable %}
-
-  {% if g.user %}
-
-    {% if dog.owner_id != g.user.id %}
-      <p>
-        <a href="{{ url_for('request_adoption', dog_id=dog.id) }}">
-          Ask About Adopting {{ dog.name }}
-        </a>
-      </p>
-    {% endif %}
-
-  {% else %}
-
-    <p>
-      <a href="{{ url_for('login') }}">
-        Log in to submit an adoption request
-      </a>
-    </p>
-
-  {% endif %}
-
-{% endif %}
-
-{% if g.user
-      and dog.owner_id
-      and dog.owner_id != g.user.id %}
-
-  <p>
-    <a href="{{ url_for(
-      'request_playdate',
-      dog_id=dog.id
-    ) }}">
-      Request a Playdate with {{ dog.name }}
-    </a>
-  </p>
-
-{% endif %}
-
-
-{% if g.user
-      and dog.owner
-      and dog.owner_id != g.user.id %}
-
-  <p>
-    <a href="{{ url_for(
-      'send_message',
-      user_id=dog.owner.id
-    ) }}">
-      Message {{ dog.owner.username }}
-    </a>
-  </p>
-
-{% endif %}
-
-{% endif %}
+</div>
 
 {% endblock %}

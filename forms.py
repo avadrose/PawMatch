@@ -12,6 +12,16 @@ from wtforms.validators import (
 class RegisterForm(FlaskForm):
     """Form for creating a new PawMatch account."""
 
+    account_type = SelectField(
+        "Account Type",
+        choices=[
+            ("individual", "Individual / Dog Owner"),
+            ("shelter", "Shelter / Rescue")
+        ],
+        default="individual",
+        validators=[DataRequired()]
+    )
+
     username = StringField(
         "Username",
         validators=[
@@ -52,7 +62,49 @@ class RegisterForm(FlaskForm):
             DataRequired(),
             EqualTo("password")
         ]
-    )    
+    )
+
+    shelter_name = StringField(
+        "Shelter / Rescue Name",
+        validators=[
+            Optional(),
+            Length(max=150)
+        ]
+    )
+
+    shelter_phone = StringField(
+        "Organization Phone",
+        validators=[
+            Optional(),
+            Length(max=30)
+        ]
+    )
+
+    shelter_website = StringField(
+        "Website",
+        validators=[Optional()]
+    )
+
+    shelter_address = StringField(
+        "Address",
+        validators=[Optional()]
+    )
+
+    shelter_city = StringField(
+        "City",
+        validators=[
+            Optional(),
+            Length(max=100)
+        ]
+    )
+
+    shelter_state = StringField(
+        "State",
+        validators=[
+            Optional(),
+            Length(max=50)
+        ]
+    )
 
     submit = SubmitField("Create Account")
 

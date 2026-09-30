@@ -1,86 +1,180 @@
 {% extends "base.html" %}
 
 {% block title %}
-Add Dog | PawMatch
+{% if dog %}
+  Edit {{ dog.name }} | PawMatch
+{% else %}
+  Add a Dog | PawMatch
+{% endif %}
 {% endblock %}
+
 
 {% block content %}
 
-{% if dog %}
-  <h1>Edit {{ dog.name }}</h1>
-{% else %}
-  <h1>Add a Dog</h1>
-{% endif %}
+<div class="container">
 
-<form method="POST">
+  <div class="pawmatch-card form-card">
 
-  {{ form.hidden_tag() }}
+    <div class="text-center mb-4">
 
-  <div>
-    {{ form.name.label }}
-    {{ form.name() }}
+      <div class="fs-1">
+        🐾
+      </div>
 
-    {% for error in form.name.errors %}
-      <p>{{ error }}</p>
-    {% endfor %}
+      {% if dog %}
+        <h1 class="auth-heading">
+          Edit {{ dog.name }}
+        </h1>
+
+        <p class="text-muted">
+          Update this dog's PawMatch profile.
+        </p>
+      {% else %}
+        <h1 class="auth-heading">
+          Add a Dog
+        </h1>
+
+        <p class="text-muted">
+          Create a profile or adoption listing.
+        </p>
+      {% endif %}
+
+    </div>
+
+
+    <form method="POST">
+
+      {{ form.hidden_tag() }}
+
+
+      <div class="mb-3">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control") }}
+
+        {% for error in form.name.errors %}
+          <div class="form-error">
+            {{ error }}
+          </div>
+        {% endfor %}
+      </div>
+
+
+      <div class="mb-3">
+        {{ form.breed.label(class="form-label") }}
+        {{ form.breed(class="form-control") }}
+      </div>
+
+
+      <div class="row">
+
+        <div class="col-md-4 mb-3">
+          {{ form.age.label(class="form-label") }}
+          {{ form.age(class="form-control") }}
+        </div>
+
+        <div class="col-md-4 mb-3">
+          {{ form.size.label(class="form-label") }}
+          {{ form.size(class="form-select") }}
+        </div>
+
+        <div class="col-md-4 mb-3">
+          {{ form.sex.label(class="form-label") }}
+          {{ form.sex(class="form-select") }}
+        </div>
+
+      </div>
+
+
+      <div class="mb-3">
+        {{ form.temperament.label(class="form-label") }}
+
+        {{ form.temperament(
+          class="form-control",
+          placeholder="Friendly, playful, calm..."
+        ) }}
+      </div>
+
+
+      <div class="mb-3">
+        {{ form.description.label(class="form-label") }}
+
+        {{ form.description(
+          class="form-control",
+          placeholder="Tell people a little about this dog..."
+        ) }}
+      </div>
+
+
+      <div class="mb-3">
+        {{ form.image_url.label(class="form-label") }}
+
+        {{ form.image_url(
+          class="form-control",
+          placeholder="https://..."
+        ) }}
+      </div>
+
+
+      <div class="row">
+
+        <div class="col-md-7 mb-3">
+          {{ form.city.label(class="form-label") }}
+          {{ form.city(class="form-control") }}
+        </div>
+
+        <div class="col-md-5 mb-3">
+          {{ form.state.label(class="form-label") }}
+          {{ form.state(class="form-control") }}
+        </div>
+
+      </div>
+
+
+      <div class="form-check mb-4">
+
+        {{ form.is_adoptable(
+          class="form-check-input"
+        ) }}
+
+        {{ form.is_adoptable.label(
+          class="form-check-label"
+        ) }}
+
+      </div>
+
+
+      {% if dog %}
+
+        <button
+          type="submit"
+          class="btn pawmatch-btn w-100"
+        >
+          Save Changes
+        </button>
+
+      {% else %}
+
+        {{ form.submit(
+          class="btn pawmatch-btn w-100"
+        ) }}
+
+      {% endif %}
+
+    </form>
+
+
+    <div class="text-center mt-3">
+
+      <a
+        href="{{ url_for('profile') }}"
+      >
+        Cancel
+      </a>
+
+    </div>
+
   </div>
 
-  <div>
-    {{ form.breed.label }}
-    {{ form.breed() }}
-  </div>
-
-  <div>
-    {{ form.age.label }}
-    {{ form.age() }}
-  </div>
-
-  <div>
-    {{ form.size.label }}
-    {{ form.size() }}
-  </div>
-
-  <div>
-    {{ form.sex.label }}
-    {{ form.sex() }}
-  </div>
-
-  <div>
-    {{ form.temperament.label }}
-    {{ form.temperament() }}
-  </div>
-
-  <div>
-    {{ form.description.label }}
-    {{ form.description() }}
-  </div>
-
-  <div>
-    {{ form.image_url.label }}
-    {{ form.image_url() }}
-  </div>
-
-  <div>
-    {{ form.city.label }}
-    {{ form.city() }}
-  </div>
-
-  <div>
-    {{ form.state.label }}
-    {{ form.state() }}
-  </div>
-
-  <div>
-    {{ form.is_adoptable() }}
-    {{ form.is_adoptable.label }}
-  </div>
-
-{% if dog %}
-  <button type="submit">Save Changes</button>
-{% else %}
-  {{ form.submit() }}
-{% endif %}
-
-</form>
+</div>
 
 {% endblock %}
