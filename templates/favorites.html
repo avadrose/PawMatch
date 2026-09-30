@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Favorites | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>My Favorite Dogs</h1>
+
+{% if favorites %}
+
+  {% for favorite in favorites %}
+
+    <div>
+
+      {% if favorite.dog.image_url %}
+        <img
+          src="{{ favorite.dog.image_url }}"
+          alt="{{ favorite.dog.name }}"
+          width="250"
+        >
+      {% endif %}
+
+      <h2>
+        <a href="{{ url_for('dog_detail', dog_id=favorite.dog.id) }}">
+          {{ favorite.dog.name }}
+        </a>
+      </h2>
+
+      {% if favorite.dog.breed %}
+        <p>
+          <strong>Breed:</strong>
+          {{ favorite.dog.breed }}
+        </p>
+      {% endif %}
+
+      {% if favorite.dog.city or favorite.dog.state %}
+        <p>
+          <strong>Location:</strong>
+
+          {{ favorite.dog.city }}
+
+          {% if favorite.dog.city and favorite.dog.state %}
+            ,
+          {% endif %}
+
+          {{ favorite.dog.state }}
+        </p>
+      {% endif %}
+
+    </div>
+
+    <hr>
+
+  {% endfor %}
+
+{% else %}
+
+  <p>You haven't saved any dogs yet.</p>
+
+{% endif %}
+
+{% endblock %}

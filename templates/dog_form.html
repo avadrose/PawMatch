@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Dog | PawMatch
+{% endblock %}
+
+{% block content %}
+
+{% if dog %}
+  <h1>Edit {{ dog.name }}</h1>
+{% else %}
+  <h1>Add a Dog</h1>
+{% endif %}
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  <div>
+    {{ form.name.label }}
+    {{ form.name() }}
+
+    {% for error in form.name.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    {{ form.breed.label }}
+    {{ form.breed() }}
+  </div>
+
+  <div>
+    {{ form.age.label }}
+    {{ form.age() }}
+  </div>
+
+  <div>
+    {{ form.size.label }}
+    {{ form.size() }}
+  </div>
+
+  <div>
+    {{ form.sex.label }}
+    {{ form.sex() }}
+  </div>
+
+  <div>
+    {{ form.temperament.label }}
+    {{ form.temperament() }}
+  </div>
+
+  <div>
+    {{ form.description.label }}
+    {{ form.description() }}
+  </div>
+
+  <div>
+    {{ form.image_url.label }}
+    {{ form.image_url() }}
+  </div>
+
+  <div>
+    {{ form.city.label }}
+    {{ form.city() }}
+  </div>
+
+  <div>
+    {{ form.state.label }}
+    {{ form.state() }}
+  </div>
+
+  <div>
+    {{ form.is_adoptable() }}
+    {{ form.is_adoptable.label }}
+  </div>
+
+{% if dog %}
+  <button type="submit">Save Changes</button>
+{% else %}
+  {{ form.submit() }}
+{% endif %}
+
+</form>
+
+{% endblock %}

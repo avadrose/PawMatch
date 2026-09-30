@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ g.user.username }} | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ g.user.first_name }} {{ g.user.last_name }}</h1>
+
+<p>
+  <strong>Username:</strong>
+  {{ g.user.username }}
+</p>
+
+<p>
+  <strong>Email:</strong>
+  {{ g.user.email }}
+</p>
+
+{% if g.user.bio %}
+  <p>
+    <strong>About:</strong>
+    {{ g.user.bio }}
+  </p>
+{% endif %}
+
+{% if g.user.city or g.user.state %}
+  <p>
+    <strong>Location:</strong>
+    {{ g.user.city }}
+    {% if g.user.city and g.user.state %},{% endif %}
+    {{ g.user.state }}
+  </p>
+{% endif %}
+
+<h2>My Dogs</h2>
+
+<p>
+  <a href="/dogs/add">Add a Dog</a>
+</p>
+
+{% if g.user.dogs %}
+  <ul>
+    {% for dog in g.user.dogs %}
+      <li>
+        <a href="{{ url_for('dog_detail', dog_id=dog.id) }}">
+        {{ dog.name }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>You haven't added any dogs yet.</p>
+{% endif %}
+
+{% endblock %}

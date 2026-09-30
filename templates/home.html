@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>PawMatch</h1>
+
+<p>
+  Dog adoption, connections, playdates, and community.
+</p>
+
+{% if g.user %}
+  <h2>Welcome, {{ g.user.first_name }}!</h2>
+
+  <p>
+    You are logged in as {{ g.user.username }}.
+  </p>
+{% else %}
+  <a href="/register">Create an Account</a>
+{% endif %}
+
+{% endblock %}

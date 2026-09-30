@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}
+Messages | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Messages</h1>
+
+{% if messages %}
+
+  {% for message in messages %}
+
+    <div>
+
+      <p>
+        <strong>From:</strong>
+        {{ message.sender.username }}
+      </p>
+
+      <p>
+        {{ message.body }}
+      </p>
+
+      <p>
+        {{ message.created_at.strftime("%B %d, %Y at %I:%M %p") }}
+      </p>
+
+      <p>
+        <a href="{{ url_for(
+          'send_message',
+          user_id=message.sender.id
+        ) }}">
+          Reply
+        </a>
+      </p>
+
+    </div>
+
+    <hr>
+
+  {% endfor %}
+
+{% else %}
+
+  <p>You don't have any messages yet.</p>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}
+Adopt {{ dog.name }} | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Adoption Request for {{ dog.name }}</h1>
+
+{% if dog.image_url %}
+  <img
+    src="{{ dog.image_url }}"
+    alt="{{ dog.name }}"
+    width="250"
+  >
+{% endif %}
+
+<p>
+  Tell the owner or rescue a little about yourself and why
+  you're interested in adopting {{ dog.name }}.
+</p>
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  <div>
+    {{ form.message.label }}
+
+    {{ form.message(
+      rows=6,
+      placeholder="Tell us why you think this dog would be a good fit..."
+    ) }}
+
+    {% for error in form.message.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  {{ form.submit() }}
+
+</form>
+
+<p>
+  <a href="{{ url_for('dog_detail', dog_id=dog.id) }}">
+    Back to {{ dog.name }}
+  </a>
+</p>
+
+{% endblock %}

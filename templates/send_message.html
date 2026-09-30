@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}
+Message {{ recipient.username }} | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Message {{ recipient.username }}</h1>
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  <div>
+    {{ form.body.label }}
+
+    {{ form.body(
+      rows=6,
+      placeholder="Write your message..."
+    ) }}
+
+    {% for error in form.body.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  {{ form.submit() }}
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}
+Incoming Playdates | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Incoming Playdate Requests</h1>
+
+{% if playdate_requests %}
+
+  {% for playdate in playdate_requests %}
+
+    <div>
+
+      <h2>
+        {{ playdate.requester_dog.name }}
+        wants to meet
+        {{ playdate.recipient_dog.name }}
+      </h2>
+
+      <p>
+        <strong>From:</strong>
+        {{ playdate.requester_dog.owner.username }}
+      </p>
+
+      <p>
+        <strong>Date:</strong>
+        {{ playdate.date }}
+      </p>
+
+      <p>
+        <strong>Time:</strong>
+        {{ playdate.time.strftime("%I:%M %p") }}
+      </p>
+
+      <p>
+        <strong>Location:</strong>
+        {{ playdate.location }}
+      </p>
+
+      {% if playdate.message %}
+        <p>
+          <strong>Message:</strong>
+          {{ playdate.message }}
+        </p>
+      {% endif %}
+
+      <p>
+        <strong>Status:</strong>
+        {{ playdate.status|title }}
+      </p>
+
+      {% if playdate.status == "pending" %}
+
+  <form
+    method="POST"
+    action="{{ url_for(
+      'accept_playdate',
+      request_id=playdate.id
+    ) }}"
+  >
+    {{ decision_form.hidden_tag() }}
+
+    <button type="submit">
+      Accept
+    </button>
+  </form>
+
+  <form
+    method="POST"
+    action="{{ url_for(
+      'decline_playdate',
+      request_id=playdate.id
+    ) }}"
+  >
+    {{ decision_form.hidden_tag() }}
+
+    <button type="submit">
+      Decline
+    </button>
+  </form>
+
+{% endif %}
+
+    </div>
+
+    <hr>
+
+  {% endfor %}
+
+{% else %}
+
+  <p>
+    You don't have any incoming playdate requests.
+  </p>
+
+{% endif %}
+
+{% endblock %}

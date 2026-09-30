@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}
+Incoming Adoption Requests | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Incoming Adoption Requests</h1>
+
+{% if adoption_requests %}
+
+  {% for adoption_request in adoption_requests %}
+
+    <div>
+
+      <h2>
+        Request for
+        <a href="{{ url_for('dog_detail', dog_id=adoption_request.dog.id) }}">
+          {{ adoption_request.dog.name }}
+        </a>
+      </h2>
+
+      <p>
+        <strong>From:</strong>
+        {{ adoption_request.user.username }}
+      </p>
+
+      <p>
+        <strong>Message:</strong>
+        {{ adoption_request.message }}
+      </p>
+
+      <p>
+        <strong>Status:</strong>
+        {{ adoption_request.status|title }}
+      </p>
+
+      <p>
+        <strong>Submitted:</strong>
+        {{ adoption_request.created_at.strftime("%B %d, %Y") }}
+      </p>
+
+      {% if adoption_request.status == "pending" %}
+
+        <form
+          method="POST"
+          action="{{ url_for(
+            'approve_adoption_request',
+            request_id=adoption_request.id
+          ) }}"
+        >
+          {{ decision_form.hidden_tag() }}
+
+          <button type="submit">
+            Approve
+          </button>
+        </form>
+
+        <form
+          method="POST"
+          action="{{ url_for(
+            'decline_adoption_request',
+            request_id=adoption_request.id
+          ) }}"
+        >
+          {{ decision_form.hidden_tag() }}
+
+          <button type="submit">
+            Decline
+          </button>
+        </form>
+
+      {% endif %}
+
+    </div>
+
+    <hr>
+
+  {% endfor %}
+
+{% else %}
+
+  <p>
+    You don't have any incoming adoption requests.
+  </p>
+
+{% endif %}
+
+{% endblock %}

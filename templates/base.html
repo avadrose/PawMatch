@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>{% block title %}PawMatch{% endblock %}</title>
+</head>
+
+<body>
+
+<nav>
+  <a href="/">PawMatch</a>
+  <a href="/adopt">Adopt</a>
+
+  {% if g.user %}
+    <span>Hi, {{ g.user.first_name }}!</span>
+    <a href="/profile">Profile</a>
+    <a href="/favorites">Favorites</a>
+    <a href="/adoption-requests">My Adoption Requests</a>
+    <a href="/adoption-requests/incoming">Incoming Requests</a>
+    <a href="/playdates">My Playdates</a>
+    <a href="/playdates/incoming">Incoming Playdates</a>
+    <a href="/messages">Messages</a>
+    <a href="/logout">Log Out</a>
+  {% else %}
+    <a href="/register">Register</a>
+    <a href="/login">Log In</a>
+  {% endif %}
+</nav>
+
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <p class="{{ category }}">
+          {{ message }}
+        </p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <main>
+    {% block content %}
+    {% endblock %}
+  </main>
+
+</body>
+</html>

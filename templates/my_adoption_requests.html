@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Adoption Requests | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>My Adoption Requests</h1>
+
+{% if adoption_requests %}
+
+  {% for adoption_request in adoption_requests %}
+
+    <div>
+
+      <h2>
+        <a href="{{ url_for(
+          'dog_detail',
+          dog_id=adoption_request.dog.id
+        ) }}">
+          {{ adoption_request.dog.name }}
+        </a>
+      </h2>
+
+      <p>
+        <strong>Status:</strong>
+        {{ adoption_request.status|title }}
+      </p>
+
+      <p>
+        <strong>Message:</strong>
+        {{ adoption_request.message }}
+      </p>
+
+      <p>
+        <strong>Submitted:</strong>
+        {{ adoption_request.created_at.strftime("%B %d, %Y at %I:%M %p") }}
+      </p>
+
+    </div>
+
+    <hr>
+
+  {% endfor %}
+
+{% else %}
+
+  <p>
+    You haven't submitted any adoption requests yet.
+  </p>
+
+{% endif %}
+
+{% endblock %}

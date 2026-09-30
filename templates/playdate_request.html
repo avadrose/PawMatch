@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}
+Playdate with {{ recipient_dog.name }} | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>
+  Request a Playdate with {{ recipient_dog.name }}
+</h1>
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  <div>
+    {{ form.requester_dog_id.label }}
+    {{ form.requester_dog_id() }}
+
+    {% for error in form.requester_dog_id.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    {{ form.date.label }}
+    {{ form.date() }}
+
+    {% for error in form.date.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    {{ form.time.label }}
+    {{ form.time() }}
+
+    {% for error in form.time.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    {{ form.location.label }}
+    {{ form.location() }}
+
+    {% for error in form.location.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    {{ form.message.label }}
+    {{ form.message(rows=5) }}
+
+    {% for error in form.message.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  {{ form.submit() }}
+
+</form>
+
+<p>
+  <a href="{{ url_for(
+    'dog_detail',
+    dog_id=recipient_dog.id
+  ) }}">
+    Back to {{ recipient_dog.name }}
+  </a>
+</p>
+
+{% endblock %}

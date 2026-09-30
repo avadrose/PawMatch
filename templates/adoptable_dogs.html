@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}
+Adopt a Dog | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Dogs Available for Adoption</h1>
+
+<form method="GET" action="{{ url_for('adoptable_dogs') }}">
+
+  <div>
+    <label for="breed">Breed</label>
+
+    <input
+      type="text"
+      id="breed"
+      name="breed"
+      value="{{ breed }}"
+      placeholder="e.g. Husky"
+    >
+  </div>
+
+  <div>
+    <label for="size">Size</label>
+
+    <select id="size" name="size">
+      <option value="">Any size</option>
+
+      <option value="Small"
+        {% if size == "Small" %}selected{% endif %}>
+        Small
+      </option>
+
+      <option value="Medium"
+        {% if size == "Medium" %}selected{% endif %}>
+        Medium
+      </option>
+
+      <option value="Large"
+        {% if size == "Large" %}selected{% endif %}>
+        Large
+      </option>
+
+      <option value="Extra Large"
+        {% if size == "Extra Large" %}selected{% endif %}>
+        Extra Large
+      </option>
+    </select>
+  </div>
+
+  <div>
+    <label for="sex">Sex</label>
+
+    <select id="sex" name="sex">
+      <option value="">Any</option>
+
+      <option value="Male"
+        {% if sex == "Male" %}selected{% endif %}>
+        Male
+      </option>
+
+      <option value="Female"
+        {% if sex == "Female" %}selected{% endif %}>
+        Female
+      </option>
+    </select>
+  </div>
+
+  <div>
+    <label for="location">Location</label>
+
+    <input
+      type="text"
+      id="location"
+      name="location"
+      value="{{ location }}"
+      placeholder="City or state"
+    >
+  </div>
+
+  <div>
+    <label for="temperament">Temperament</label>
+
+    <input
+      type="text"
+      id="temperament"
+      name="temperament"
+      value="{{ temperament }}"
+      placeholder="e.g. friendly"
+    >
+  </div>
+
+  <button type="submit">
+    Search
+  </button>
+
+  <a href="{{ url_for('adoptable_dogs') }}">
+    Clear Filters
+  </a>
+
+</form>
+
+<hr>
+
+{% if dogs %}
+
+  {% for dog in dogs %}
+
+    <div>
+
+      {% if dog.image_url %}
+        <img
+          src="{{ dog.image_url }}"
+          alt="{{ dog.name }}"
+          width="250"
+        >
+      {% endif %}
+
+      <h2>
+        <a href="{{ url_for('dog_detail', dog_id=dog.id) }}">
+          {{ dog.name }}
+        </a>
+      </h2>
+
+      {% if dog.breed %}
+        <p>
+          <strong>Breed:</strong>
+          {{ dog.breed }}
+        </p>
+      {% endif %}
+
+      {% if dog.age is not none %}
+        <p>
+          <strong>Age:</strong>
+          {{ dog.age }}
+        </p>
+      {% endif %}
+
+      {% if dog.size %}
+        <p>
+          <strong>Size:</strong>
+          {{ dog.size }}
+        </p>
+      {% endif %}
+
+      {% if dog.city or dog.state %}
+        <p>
+          <strong>Location:</strong>
+
+          {{ dog.city }}
+
+          {% if dog.city and dog.state %}
+            ,
+          {% endif %}
+
+          {{ dog.state }}
+        </p>
+      {% endif %}
+
+    </div>
+
+    <hr>
+
+  {% endfor %}
+
+{% else %}
+
+  <p>
+    There are currently no dogs available for adoption.
+  </p>
+
+{% endif %}
+
+{% endblock %}

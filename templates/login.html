@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}
+Login | PawMatch
+{% endblock %}
+
+{% block content %}
+
+<h1>Log In</h1>
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  <div>
+    {{ form.username.label }}
+    {{ form.username() }}
+
+    {% for error in form.username.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  <div>
+    {{ form.password.label }}
+    {{ form.password() }}
+
+    {% for error in form.password.errors %}
+      <p>{{ error }}</p>
+    {% endfor %}
+  </div>
+
+  {{ form.submit() }}
+
+</form>
+
+{% endblock %}
